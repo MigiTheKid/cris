@@ -57,6 +57,32 @@ const ASSIGNMENTS = [
   { plate: "SXH-2B72", cpf: "00000000106" }, // Jucemar
 ];
 
+// --- Documentos de AMOSTRA (notes='amostra') — Gabriel substitui por reais.
+// [doc_type, dias_para_vencer]. Distribuição proposital p/ o painel acender.
+// MJE-8F98 CIPP usa data real conhecida (24/06/2026).
+const DOC_PLAN = {
+  "AUH-6B05": [["crlv", -12]], // vencido
+  "EVK-1792": [["crlv", -3]], // vencido
+  "HTP-2H05": [["crlv", 4], ["cipp", 40]], // crítico
+  "RAA-9I02": [["crlv", 180], ["cipp", 6]], // crítico (CIPP)
+  "PRP-3F41": [["crlv", 11]], // alerta
+  "MMJ-7325": [["crlv", 14]], // alerta
+  "MJE-8F98": [["crlv", 220], ["cipp", 21]], // atenção (CIPP real ~24/06)
+  "JAQ-3B19": [["crlv", 27]], // atenção
+  "SXJ-8I34": [["crlv", 300]],
+  "SXJ-8C24": [["crlv", 130]],
+  "SXH-2B72": [["crlv", 410]],
+  "SXL-9E56": [["crlv", 90]],
+  "BEB-4D79": [["crlv", 250]],
+  "QIK-1J12": [["crlv", 160]],
+  "MYW-6B15": [["crlv", 500]],
+};
+
+function dateOffset(days) {
+  const d = new Date(Date.now() + days * 86400000);
+  return d.toISOString().slice(0, 10);
+}
+
 async function ensureUser({ cpf, full_name, role = "driver" }) {
   const email = `${cpf}@${DOMAIN}`;
   // Procura existente
@@ -83,8 +109,10 @@ async function ensureUser({ cpf, full_name, role = "driver" }) {
 
 async function main() {
   console.log("Limpando dados de negócio…");
-  await db.from("vehicle_assignments").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-  await db.from("vehicles").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  const ZERO = "00000000-0000-0000-0000-000000000000";
+  await db.from("vehicle_documents").delete().neq("id", ZERO);
+  await db.from("vehicle_assignments").delete().neq("id", ZERO);
+  await db.from("vehicles").delete().neq("id", ZERO);
 
   console.log("Criando admin e motoristas…");
   const adminId = await ensureUser(ADMIN);
@@ -111,8 +139,24 @@ async function main() {
   const { error: aErr } = await db.from("vehicle_assignments").insert(assignRows);
   if (aErr) throw new Error(`assignments: ${aErr.message}`);
 
+  console.log("Inserindo documentos de amostra…");
+  const docRows = [];
+  for (const [plate, docs] of Object.entries(DOC_PLAN)) {
+    for (const [doc_type, days] of docs) {
+      docRows.push({
+        vehicle_id: byPlate[plate],
+        doc_type,
+        expires_at: dateOffset(days),
+        notes: "amostra",
+        created_by: adminId,
+      });
+    }
+  }
+  const { error: dErr } = await db.from("vehicle_documents").insert(docRows);
+  if (dErr) throw new Error(`documents: ${dErr.message}`);
+
   console.log(
-    `OK: ${VEHICLES.length} veículos, ${DRIVERS.length} motoristas, ${ASSIGNMENTS.length} atribuições, 1 admin (CPF ${ADMIN.cpf}, senha ${DEFAULT_PASSWORD}).`,
+    `OK: ${VEHICLES.length} veículos, ${DRIVERS.length} motoristas, ${ASSIGNMENTS.length} atribuições, ${docRows.length} documentos (amostra), 1 admin (CPF ${ADMIN.cpf}, senha ${DEFAULT_PASSWORD}).`,
   );
 }
 

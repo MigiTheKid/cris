@@ -25,3 +25,20 @@ export function vehicleTypeLabel(t: VehicleType): string {
 export function companyLabel(k: CompanyKind): string {
   return COMPANY_LABELS[k] ?? k;
 }
+
+type VehicleDocType = Database["public"]["Enums"]["vehicle_doc_type"];
+
+const VEHICLE_DOC_LABELS: Record<VehicleDocType, string> = {
+  crlv: "CRLV",
+  cipp: "CIPP",
+  inmetro: "INMETRO",
+  tara: "TARA",
+  lac: "LAC",
+  modal_rodoviario: "Modal Rodoviário",
+  cert_regularidade: "Cert. de Regularidade",
+  outro: "Outro",
+};
+
+export function vehicleDocLabel(t: VehicleDocType): string {
+  return VEHICLE_DOC_LABELS[t] ?? t;
+}
