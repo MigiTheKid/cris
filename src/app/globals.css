@@ -93,6 +93,13 @@
   --border-strong: color-mix(in oklab, var(--brand-teal) 26%, transparent);
   --teal-bright: var(--brand-teal);
   --glass-blur: 14px;
+  --ring-grad: conic-gradient(
+    from 0deg,
+    transparent,
+    color-mix(in oklab, var(--brand-amber) 55%, transparent),
+    transparent 38%
+  );
+  --shadow-pop: 0 26px 60px -30px rgba(7, 80, 86, 0.45);
 
   /* ---- Mapeamento shadcn → marca ---- */
   --background: var(--bg);

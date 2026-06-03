@@ -1,14 +1,28 @@
 import Link from "next/link";
-import { Truck, Users, AlertTriangle, CalendarClock } from "lucide-react";
-import { getFleetDashboard } from "@/lib/data/dashboard";
-import { getVehicleList } from "@/lib/data/vehicles";
-import { getDriverCards } from "@/lib/data/drivers";
-import { vehicleTypeLabel, vehicleDocLabel } from "@/lib/labels";
-import { statusTone } from "@/lib/status";
-import { HealthGauge } from "@/components/cris/HealthGauge";
+import { Truck, Users, Plus, AlertTriangle, CalendarClock, Wrench, ArrowRight } from "lucide-react";
+import { getCommandCenter } from "@/lib/data/command";
+import type { StatusTone } from "@/lib/status";
+import { Gauge } from "@/components/cris/Gauge";
+import { ActionNow } from "@/components/cris/ActionNow";
 import { Avatar } from "@/components/cris/Avatar";
+import { StatusBadge } from "@/components/cris/StatusBadge";
 
 export const dynamic = "force-dynamic";
+
+const TONE_VAR: Record<StatusTone, string> = {
+  ok: "var(--ok)",
+  warn: "var(--warn)",
+  alert: "var(--alert)",
+  crit: "var(--crit)",
+  idle: "var(--idle)",
+};
+
+const LEGEND: { tone: StatusTone; label: string }[] = [
+  { tone: "ok", label: "Em dia" },
+  { tone: "warn", label: "Atenção" },
+  { tone: "alert", label: "Alerta" },
+  { tone: "crit", label: "Crítico" },
+];
 
 function greeting(h: number) {
   if (h < 12) return "Bom dia.";
@@ -16,165 +30,315 @@ function greeting(h: number) {
   return "Boa noite.";
 }
 
-function daysLabel(days: number) {
-  if (days < 0) return `vencido há ${Math.abs(days)}d`;
-  if (days === 0) return "vence hoje";
-  return `vence em ${days}d`;
-}
-
 export default async function PainelPage() {
-  const [dash, vehicles, drivers] = await Promise.all([
-    getFleetDashboard(),
-    getVehicleList(),
-    getDriverCards(),
-  ]);
-
+  const cc = await getCommandCenter();
   const hour = new Date().getHours();
 
   return (
-    <div className="space-y-9 py-2">
+    <div className="pt-1">
       {/* Hero */}
-      <header>
-        <span className="cmd-badge">
-          <span className="dot ok live" />
-          <span className="tag">Centro de Comando</span>
-          <span className="text-[var(--text-3)]">·</span>
-          Gabriel
-        </span>
-        <h1 className="hero-title">
-          {greeting(hour)}
-          <br />
-          <span className="dim">Sua frota hoje.</span>
-        </h1>
-      </header>
+      <div className="cmd-hero-head cmd-in ci-1">
+        <div>
+          <div className="cmd-hero-badge">
+            <span className="dot ok live" />
+            <span className="hb-label">Centro de Comando</span>
+            <span className="hb-div" />
+            <span className="hb-user">
+              <Avatar name="Gabriel Krull" size={22} hue={188} /> <b>Gabriel</b>
+            </span>
+          </div>
+          <h1 className="cmd-hero-title">
+            {greeting(hour)}
+            <br />
+            <span className="thin">Sua frota hoje.</span>
+          </h1>
+        </div>
+        <div style={{ display: "flex", gap: 12 }}>
+          <Link href="/frota" className="cbtn ghost">
+            <Truck size={17} /> Ver frota
+          </Link>
+          <button className="cbtn primary">
+            <Wrench size={17} /> Lançar manutenção
+          </button>
+        </div>
+      </div>
 
       {/* Bento */}
-      <section className="grid gap-4 lg:grid-cols-12">
+      <div className="bento">
         {/* Saúde da frota */}
-        <div className="cris-card lg:col-span-5">
-          <div className="eyebrow mb-5">Saúde da frota</div>
-          <HealthGauge
-            counts={dash.counts}
-            total={dash.total}
-            conformidadePct={dash.conformidadePct}
-          />
+        <div className="bento-card cmd-command cmd-in ci-2">
+          <div className="cc-top">
+            <span className="cc-title">Saúde da frota</span>
+            <span className="cmd-live" style={{ height: 30, fontSize: 11.5 }}>
+              <span className="dot ok live" /> ao vivo
+            </span>
+          </div>
+          <div className="gauge-wrap">
+            <Gauge
+              pct={cc.conformidadePct}
+              segments={LEGEND.map((l) => ({ tone: l.tone, count: cc.counts[l.tone] }))}
+              total={cc.total}
+            />
+          </div>
+          <div className="cc-legend">
+            {LEGEND.map((l) => (
+              <div className="cc-leg" key={l.tone}>
+                <span className={`dot ${l.tone}`} />
+                <span className="cc-leg-n">{cc.counts[l.tone]}</span>
+                <span className="cc-leg-l">{l.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Ação agora */}
-        <div className="cris-card lg:col-span-4">
-          <div className="eyebrow mb-4 flex items-center gap-2">
-            <span className="dot crit" />
-            Ação agora
-          </div>
-          {dash.criticalItems.length === 0 ? (
-            <p className="py-8 text-center text-sm text-[var(--text-3)]">
-              Nenhum documento crítico. Tudo sob controle. 🎉
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {dash.criticalItems.slice(0, 4).map((it, i) => (
-                <li key={i} className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="font-semibold text-[var(--text)]">
-                      {vehicleDocLabel(it.docType)}
-                    </div>
-                    <div className="mono text-xs text-[var(--text-3)]">
-                      {it.plate} · {it.model ?? "—"}
-                    </div>
-                  </div>
-                  <span className="days-pill crit">{daysLabel(it.days)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <ActionNow alerts={cc.alerts} />
 
         {/* Stats */}
-        <div className="grid gap-4 lg:col-span-3">
-          <div className="cris-card">
-            <AlertTriangle size={20} className="mb-2 text-[var(--crit)]" />
-            <div className="stat-num">{dash.criticos}</div>
-            <div className="mt-1 text-sm text-[var(--text-3)]">Críticos / vencidos</div>
+        <div className="bento-card cmd-stat cmd-in ci-3" data-tone="crit">
+          <div className="cs-ico">
+            <AlertTriangle size={19} />
           </div>
-          <div className="cris-card">
-            <CalendarClock size={20} className="mb-2 text-[var(--alert)]" />
-            <div className="stat-num">{dash.vencendo30}</div>
-            <div className="mt-1 text-sm text-[var(--text-3)]">
-              Vencendo em 30 dias
-              <span className="mt-0.5 block text-xs">{dash.vencendo15} em 15 dias</span>
+          <div className="cs-num">{cc.criticos}</div>
+          <div className="cs-lbl">Críticos / vencidos</div>
+          <div className="cs-break">
+            <span className="cs-seg">
+              <span className="cs-ic">
+                <Truck size={14} />
+              </span>
+              <b>{cc.vehCrit}</b> veículos
+            </span>
+            <span className="cs-seg">
+              <span className="cs-ic">
+                <Users size={14} />
+              </span>
+              <b>{cc.drvCrit}</b> motoristas
+            </span>
+          </div>
+        </div>
+        <div className="bento-card cmd-stat cmd-in ci-3" data-tone="warn">
+          <div className="cs-ico">
+            <CalendarClock size={19} />
+          </div>
+          <div className="cs-num">{cc.vencendo30}</div>
+          <div className="cs-lbl">Vencendo em 30 dias</div>
+          <div className="cs-break">
+            <span className="cs-seg">
+              <span className="dot alert" />
+              <b>{cc.vencendo15}</b> em 15 dias
+            </span>
+            <span className="cs-seg">
+              <span className="dot warn" />
+              <b>{cc.vencendo30}</b> em 30 dias
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Pulso da frota */}
+      <div style={{ marginTop: 18 }}>
+        <div className="bento-card pulse-card cmd-in ci-4">
+          <div className="pulse-head">
+            <span className="pulse-title">Pulso da frota</span>
+            <span className="cmd-section-count">{cc.total} veículos</span>
+            <div className="pulse-legend">
+              <span>
+                <span className="dot ok" /> em dia
+              </span>
+              <span>
+                <span className="dot warn" /> atenção
+              </span>
+              <span>
+                <span className="dot alert" /> alerta
+              </span>
+              <span>
+                <span className="dot crit" /> crítico
+              </span>
             </div>
           </div>
+          <div className="pulse-strip">
+            {cc.pulse.map((p, i) => (
+              <div
+                key={i}
+                className="pulse-col"
+                data-st={p.tone}
+                style={{ "--bar": TONE_VAR[p.tone] } as React.CSSProperties}
+              >
+                <div className="pulse-track">
+                  <div className="pulse-fill" style={{ height: `${p.fill}%` }}>
+                    <span className="pulse-tip" />
+                  </div>
+                </div>
+                <div className="pulse-lbl">
+                  <span className="pl-plate">{p.plate}</span>
+                  <span className="pl-driver">{p.driverFirst ?? "—"}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </section>
+      </div>
 
-      {/* Frota */}
-      <section>
-        <div className="mb-3 flex items-center gap-3">
-          <Truck size={18} className="text-[var(--brand-amber)]" />
-          <h2 className="text-lg font-semibold text-[var(--text)]">Frota</h2>
-          <span className="text-sm text-[var(--text-3)]">{vehicles.length} veículos</span>
-          <Link
-            href="/frota"
-            className="ml-auto text-sm font-semibold text-[var(--teal-bright)] hover:text-[var(--brand-amber)]"
-          >
-            Ver todos
+      {/* Frota cinematográfica */}
+      <section className="cmd-section cmd-in ci-5">
+        <div className="cmd-section-head">
+          <span className="cmd-section-ico">
+            <Truck size={20} />
+          </span>
+          <h2 className="cmd-section-title">Frota</h2>
+          <span className="cmd-section-count">{cc.total} veículos</span>
+          <span className="cmd-section-rule" />
+          <Link href="/frota" className="link-btn">
+            Ver todos <ArrowRight size={15} />
           </Link>
         </div>
-        <div className="cf-rail">
-          {vehicles.map((v) => {
-            const { tone, label } = statusTone(v.status);
-            return (
-              <Link key={v.id} href="/frota" className="cf-card block">
-                <div className="cf-thumb">
-                  <Truck size={30} />
+        <div className="cine">
+          {cc.fleet.map((v) => (
+            <Link key={v.id} href="/frota" className="cine-card">
+              <div style={{ position: "relative" }}>
+                <div className="thumb" style={{ height: 180 }}>
+                  <div className="thumb-ph">
+                    <Truck size={30} />
+                    <span className="mono">foto do veículo</span>
+                  </div>
+                  <div className="cine-photo-over" />
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="plate-chip">{v.plate}</span>
-                  <span className={`dot ${tone}`} title={label} />
+                <div className="cine-top">
+                  <span className="cine-comp">{v.companyLabel}</span>
+                  <span className="cine-light">
+                    <span className={`dot ${v.tone}${v.tone === "crit" ? "live" : ""}`} />
+                    {v.statusLabel}
+                  </span>
                 </div>
-                <div className="mt-2 truncate font-semibold text-[var(--text)]">
-                  {v.model ?? "—"}
+                <div className="cine-plate-over">
+                  <div className="p">{v.plate}</div>
                 </div>
-                <div className="text-xs text-[var(--text-3)]">
-                  {vehicleTypeLabel(v.vehicleType)}
+              </div>
+              <div className="cine-body">
+                <div className="cine-model">{v.model ?? "—"}</div>
+                <div className="cine-meta">
+                  {v.typeLabel}
+                  {v.year ? ` · ${v.year}` : ""}
                 </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Motoristas */}
-      <section>
-        <div className="mb-3 flex items-center gap-3">
-          <Users size={18} className="text-[var(--brand-amber)]" />
-          <h2 className="text-lg font-semibold text-[var(--text)]">Motoristas</h2>
-          <span className="text-sm text-[var(--text-3)]">{drivers.length} condutores</span>
-          <Link
-            href="/motoristas"
-            className="ml-auto text-sm font-semibold text-[var(--teal-bright)] hover:text-[var(--brand-amber)]"
-          >
-            Ver todos
-          </Link>
-        </div>
-        <div className="cf-rail">
-          {drivers.map((d) => (
-            <Link key={d.id} href="/motoristas" className="cf-card block">
-              <div className="flex flex-col items-center gap-3 py-2">
-                <Avatar name={d.name} size={64} />
-                <div className="text-center">
-                  <div className="font-semibold text-[var(--text)]">{d.name}</div>
-                  {d.vehiclePlate ? (
-                    <span className="plate-chip mt-1 inline-flex">{d.vehiclePlate}</span>
-                  ) : (
-                    <div className="mt-1 text-xs text-[var(--text-3)]">sem veículo</div>
-                  )}
+                <div className="cine-foot">
+                  <span className="who">
+                    {v.driverName ? (
+                      <>
+                        <Avatar name={v.driverName} size={22} />
+                        <span>{v.driverName}</span>
+                      </>
+                    ) : (
+                      <span style={{ color: "var(--text-3)" }}>sem motorista</span>
+                    )}
+                  </span>
+                  <span className="stat">
+                    {v.critCount > 0 ? (
+                      <span style={{ color: "var(--crit)" }}>
+                        {v.critCount} crítico{v.critCount > 1 ? "s" : ""}
+                      </span>
+                    ) : v.attnCount > 0 ? (
+                      <span style={{ color: "var(--warn)" }}>{v.attnCount} atenção</span>
+                    ) : v.docTotal > 0 ? (
+                      <span style={{ color: "var(--ok)" }}>em dia</span>
+                    ) : (
+                      <span style={{ color: "var(--text-3)" }}>sem docs</span>
+                    )}
+                  </span>
                 </div>
               </div>
             </Link>
           ))}
         </div>
       </section>
+
+      {/* Motoristas */}
+      <section className="cmd-section cmd-in ci-6">
+        <div className="cmd-section-head">
+          <span className="cmd-section-ico">
+            <Users size={20} />
+          </span>
+          <h2 className="cmd-section-title">Motoristas</h2>
+          <span className="cmd-section-count">{cc.crew.length} ativos</span>
+          <span className="cmd-section-rule" />
+          <Link href="/motoristas" className="link-btn">
+            Ver todos <ArrowRight size={15} />
+          </Link>
+        </div>
+        <div className="crew">
+          {cc.crew.map((d) => (
+            <Link key={d.id} href="/motoristas" className="crew-card">
+              <div className="crew-av" style={{ color: TONE_VAR[d.tone] }}>
+                <span className="ring" />
+                <Avatar name={d.name} size={62} />
+              </div>
+              <div className="crew-name">{d.name}</div>
+              <div className="crew-veh">
+                <Truck size={14} />
+                <span className="mono">{d.vehiclePlate ?? "—"}</span>
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <StatusBadge tone={d.tone} label="Sem data" />
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Ocorrências + Atalhos */}
+      <div className="cmd-two cmd-in ci-7">
+        <div className="bento-card feed-card">
+          <div className="cmd-section-head" style={{ marginBottom: 8 }}>
+            <h2 className="cmd-section-title" style={{ fontSize: 20 }}>
+              Ocorrências ao vivo
+            </h2>
+            <span className="cmd-section-count">0</span>
+          </div>
+          <div className="feed-empty">
+            Nenhuma ocorrência aberta. Quando um motorista reportar um problema pelo app, aparece
+            aqui.
+          </div>
+        </div>
+
+        <div>
+          <div className="cmd-section-head" style={{ marginBottom: 14 }}>
+            <h2 className="cmd-section-title" style={{ fontSize: 20 }}>
+              Atalhos
+            </h2>
+          </div>
+          <div className="act-stack">
+            <Link href="/frota" className="act-btn">
+              <span className="act-ico">
+                <Plus size={24} />
+              </span>
+              <span className="act-txt">
+                <b>Cadastrar veículo</b>
+                <span>Nova placa na frota</span>
+              </span>
+              <ArrowRight size={18} className="act-arrow" />
+            </Link>
+            <Link href="/motoristas" className="act-btn">
+              <span className="act-ico">
+                <Users size={24} />
+              </span>
+              <span className="act-txt">
+                <b>Cadastrar motorista</b>
+                <span>Novo condutor</span>
+              </span>
+              <ArrowRight size={18} className="act-arrow" />
+            </Link>
+            <button className="act-btn">
+              <span className="act-ico">
+                <Wrench size={24} />
+              </span>
+              <span className="act-txt">
+                <b>Lançar manutenção</b>
+                <span>NF · fornecedor · valor · KM</span>
+              </span>
+              <ArrowRight size={18} className="act-arrow" />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
