@@ -1,0 +1,334 @@
+/* CRIS — Login (portado do design handoff: login.css) */
+.loginBg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+}
+.loginVeil {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 90% at 50% 40%,
+    transparent 40%,
+    color-mix(in oklab, var(--bg) 70%, transparent) 88%
+  );
+}
+
+.loginStage {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+
+.authCard {
+  width: min(960px, 100%);
+  display: grid;
+  grid-template-columns: 0.92fr 1.08fr;
+  border-radius: 28px;
+  overflow: hidden;
+  background: var(--panel-solid);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 50px 110px -45px rgba(7, 80, 86, 0.5),
+    0 2px 0 rgba(255, 255, 255, 0.6) inset;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .authCard {
+    animation: authrise 0.7s cubic-bezier(0.16, 0.84, 0.3, 1) both;
+  }
+}
+@keyframes authrise {
+  from {
+    transform: translateY(20px) scale(0.99);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* ---------- Lado da marca ---------- */
+.authBrand {
+  position: relative;
+  padding: 40px 38px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(
+      120% 80% at 15% 0%,
+      color-mix(in oklab, var(--brand-teal) 60%, #0a6b6f) 0%,
+      transparent 60%
+    ),
+    linear-gradient(160deg, #0a6066, #064247 70%, #053a3e);
+  overflow: hidden;
+}
+.authBrand::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1.3px, transparent 1.4px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(120% 90% at 80% 10%, black, transparent 70%);
+}
+.brandTop {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  position: relative;
+  z-index: 1;
+}
+.brandEmblem {
+  filter: drop-shadow(0 6px 20px rgba(248, 199, 45, 0.45));
+  display: inline-flex;
+}
+.brandName {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1;
+}
+.brandName small {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  margin-top: 5px;
+}
+.brandMid {
+  margin-top: auto;
+  position: relative;
+  z-index: 1;
+}
+.brandH {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+.brandP {
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.78);
+  margin-top: 12px;
+  max-width: 320px;
+}
+.brandPoints {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+.brandPoints li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.92);
+}
+.bpIco {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: rgba(248, 199, 45, 0.16);
+  color: var(--brand-amber);
+}
+.brandFoot {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 30px;
+  position: relative;
+  z-index: 1;
+}
+.brandFoot span {
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 700;
+}
+.brandFootLogo {
+  height: 30px;
+  width: auto;
+  filter: brightness(0) invert(1);
+  opacity: 0.92;
+}
+
+/* ---------- Lado do formulário ---------- */
+.authForm {
+  padding: 44px 46px;
+  display: flex;
+  flex-direction: column;
+}
+.afTitle {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.afSub {
+  color: var(--text-3);
+  font-size: 14px;
+  margin-top: 6px;
+}
+.afFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 30px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.field > label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-2);
+  letter-spacing: 0.01em;
+}
+.input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 15px;
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--text-3) 6%, transparent);
+  border: 1.5px solid var(--border);
+  transition:
+    border-color 0.16s,
+    background 0.16s,
+    box-shadow 0.16s;
+}
+.input:focus-within {
+  border-color: var(--brand-amber);
+  background: var(--panel-solid);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--brand-amber) 18%, transparent);
+}
+.iIco {
+  color: var(--text-3);
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.input:focus-within .iIco {
+  color: var(--brand-amber);
+}
+.input input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 15.5px;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+.input input::placeholder {
+  color: var(--text-3);
+  font-family: var(--font-ui);
+  letter-spacing: 0;
+}
+.pwToggle {
+  background: transparent;
+  border: 0;
+  color: var(--text-3);
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border-radius: 8px;
+}
+.pwToggle:hover {
+  color: var(--text);
+}
+.afRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+.afLink {
+  color: var(--teal-bright);
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.afLink:hover {
+  color: var(--brand-amber);
+}
+.afSubmit {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 54px;
+  font-size: 16px;
+  font-weight: 700;
+  border: 0;
+  border-radius: 14px;
+  margin-top: 22px;
+  white-space: nowrap;
+  background: var(--brand-amber);
+  color: var(--accent-ink);
+  font-family: var(--font-ui);
+  transition:
+    filter 0.16s,
+    transform 0.06s;
+}
+.afSubmit:hover {
+  filter: brightness(1.04);
+}
+.afSubmit:active {
+  transform: translateY(1px);
+}
+.afFirstaccess {
+  margin-top: auto;
+  padding-top: 26px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.afFirstaccess b {
+  color: var(--text-2);
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .authCard {
+    grid-template-columns: 1fr;
+    max-width: 460px;
+  }
+  .authBrand {
+    padding: 30px 30px 26px;
+  }
+  .brandMid {
+    margin-top: 22px;
+  }
+  .brandPoints {
+    gap: 10px;
+  }
+  .authForm {
+    padding: 32px 30px 34px;
+  }
+}

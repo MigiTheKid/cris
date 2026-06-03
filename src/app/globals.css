@@ -2,14 +2,28 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is([data-theme="dark"] *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-ui);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-display);
+
+  /* Marca CRIS */
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-amber: var(--brand-amber);
+
+  /* Status semântico (vencimento) */
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-alert: var(--alert);
+  --color-crit: var(--crit);
+  --color-info: var(--info);
+  --color-idle: var(--idle);
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -45,86 +59,169 @@
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ============================================================
+   CRIS — tokens da marca (tema CLARO padrão)
+   Teal petróleo #075056 + âmbar #f8c72d. Ver design handoff §5.
+   ============================================================ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Marca */
+  --brand-teal: #075056;
+  --brand-amber: #f8c72d;
+  --accent-ink: #1a1505;
+
+  /* Status semântico */
+  --ok: oklch(0.78 0.15 160);
+  --warn: oklch(0.82 0.15 92);
+  --alert: oklch(0.74 0.17 55);
+  --crit: oklch(0.66 0.2 25);
+  --info: oklch(0.74 0.11 230);
+  --idle: oklch(0.6 0.01 220);
+
+  /* Superfícies / texto (claro) */
+  --bg: oklch(0.975 0.006 200);
+  --panel: color-mix(in oklab, white 78%, transparent);
+  --panel-solid: #ffffff;
+  --text: oklch(0.27 0.03 210);
+  --text-2: oklch(0.42 0.03 210);
+  --text-3: oklch(0.55 0.025 210);
+  --hover: color-mix(in oklab, var(--brand-teal) 6%, transparent);
+  --border-strong: color-mix(in oklab, var(--brand-teal) 26%, transparent);
+  --teal-bright: var(--brand-teal);
+
+  /* ---- Mapeamento shadcn → marca ---- */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--panel-solid);
+  --card-foreground: var(--text);
+  --popover: var(--panel-solid);
+  --popover-foreground: var(--text);
+  --primary: var(--brand-amber);
+  --primary-foreground: var(--accent-ink);
+  --secondary: color-mix(in oklab, var(--brand-teal) 8%, white);
+  --secondary-foreground: var(--brand-teal);
+  --muted: color-mix(in oklab, var(--brand-teal) 5%, white);
+  --muted-foreground: var(--text-3);
+  --accent: var(--hover);
+  --accent-foreground: var(--text);
+  --destructive: var(--crit);
+  --border: color-mix(in oklab, var(--brand-teal) 14%, transparent);
+  --input: color-mix(in oklab, var(--brand-teal) 14%, transparent);
+  --ring: var(--brand-amber);
+
+  --chart-1: var(--ok);
+  --chart-2: var(--warn);
+  --chart-3: var(--alert);
+  --chart-4: var(--crit);
+  --chart-5: var(--info);
+
+  --radius: 0.875rem;
+
+  --sidebar: var(--panel-solid);
+  --sidebar-foreground: var(--text);
+  --sidebar-primary: var(--brand-amber);
+  --sidebar-primary-foreground: var(--accent-ink);
+  --sidebar-accent: var(--hover);
+  --sidebar-accent-foreground: var(--text);
+  --sidebar-border: color-mix(in oklab, var(--brand-teal) 14%, transparent);
+  --sidebar-ring: var(--brand-amber);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
+/* ============================================================
+   Base
+   ============================================================ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-ui);
   }
-  html {
-    @apply font-sans;
+}
+
+/* Tipos utilitários da marca */
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.01em;
+}
+.display {
+  font-family: var(--font-display);
+}
+.eyebrow {
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+}
+
+/* Status dot + halo (ver §4 do handoff) */
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 99px;
+  flex: none;
+  position: relative;
+}
+.dot::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 99px;
+  background: radial-gradient(circle, currentColor 0%, transparent 68%);
+  opacity: 0.35;
+}
+.dot.ok {
+  background: var(--ok);
+  color: var(--ok);
+}
+.dot.warn {
+  background: var(--warn);
+  color: var(--warn);
+}
+.dot.alert {
+  background: var(--alert);
+  color: var(--alert);
+}
+.dot.crit {
+  background: var(--crit);
+  color: var(--crit);
+}
+.dot.idle {
+  background: var(--idle);
+  color: var(--idle);
+}
+.dot.live::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 99px;
+  background: currentColor;
+  animation: cris-pulse 2.4s ease-out infinite;
+}
+@keyframes cris-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

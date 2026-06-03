@@ -1,23 +1,32 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Fontes da marca CRIS (ver design handoff §5)
+const display = Space_Grotesk({
+  variable: "--font-display",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const ui = Plus_Jakarta_Sans({
+  variable: "--font-ui",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const mono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "CRIS — Gestão de Frota",
+  title: "CRIS — Centro de Comando",
   description:
-    "Sistema de gestão da frota. Em homenagem a São Cristóvão, padroeiro dos motoristas.",
+    "Sistema de gestão da frota TOP DIESEL. Em homenagem a São Cristóvão, padroeiro dos motoristas.",
 };
 
 export default function RootLayout({
@@ -26,7 +35,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="pt-BR"
+      data-theme="light"
+      className={`${display.variable} ${ui.variable} ${mono.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col">
         <Providers>{children}</Providers>
         <Toaster richColors position="bottom-right" />
