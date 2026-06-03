@@ -36,3 +36,21 @@ export function expiryStatus(
   if (days <= 30) return "atencao";
   return "em_dia";
 }
+
+// Severidade para escolher o "pior" status de um conjunto (maior = pior).
+const SEVERITY: Record<ExpiryStatus, number> = {
+  sem_data: 0,
+  em_dia: 1,
+  atencao: 2,
+  alerta: 3,
+  critico: 4,
+  vencido: 5,
+};
+
+/** Pior status entre vários (ex.: todos os documentos de um veículo). Vazio → sem_data. */
+export function worstExpiryStatus(statuses: ExpiryStatus[]): ExpiryStatus {
+  return statuses.reduce<ExpiryStatus>(
+    (worst, s) => (SEVERITY[s] > SEVERITY[worst] ? s : worst),
+    "sem_data",
+  );
+}
