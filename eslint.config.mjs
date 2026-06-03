@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // CRIS: protótipos de design (referência, não código de produção),
+    // docs, infra do supabase e types gerados.
+    "_design/**",
+    "design_handoff_cris/**",
+    "_docs/**",
+    "supabase/**",
+    "src/lib/database.types.ts",
   ]),
 ]);
 

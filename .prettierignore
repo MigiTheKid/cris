@@ -2,4 +2,8 @@
 node_modules
 pnpm-lock.yaml
 _docs
+_design
+design_handoff_cris
 public
+src/lib/database.types.ts
+supabase

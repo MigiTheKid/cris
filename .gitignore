@@ -37,6 +37,10 @@ yarn-error.log*
 # Claude Code (settings do projeto entram; locais/pessoais não)
 .claude/settings.local.json
 
+# Referência de design (protótipos do Claude Design — não versionar)
+/_design
+/design_handoff_cris
+
 # Playwright
 /playwright-report
 /test-results
