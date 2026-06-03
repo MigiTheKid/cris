@@ -1,0 +1,8 @@
+pnpm exec lint-staged
+
+# Guarda: bloqueia commit se um secret de servidor aparecer em arquivo versionado.
+# (SERVICE_ROLE / OPENAI_API_KEY só podem viver em .env.local, fora do Git.)
+if git diff --cached --name-only | grep -vE '(\.env\.example|\.husky/pre-commit)$' | xargs -r grep -lE 'SUPABASE_SERVICE_ROLE_KEY *=.+|OPENAI_API_KEY *=.+' 2>/dev/null; then
+  echo "✋ Possível secret de servidor em arquivo versionado. Mova para .env.local."
+  exit 1
+fi

@@ -30,8 +30,16 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files (segredos nunca vão pro Git; exemplo sim)
 .env*
+!.env.example
+
+# Claude Code (settings do projeto entram; locais/pessoais não)
+.claude/settings.local.json
+
+# Playwright
+/playwright-report
+/test-results
 
 # vercel
 .vercel
