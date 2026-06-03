@@ -38,7 +38,7 @@ export function Sidebar() {
 
       <nav className="nav">
         {NAV.map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href} className={`nav-item${isActive(href) ? "active" : ""}`}>
+          <Link key={href} href={href} className={isActive(href) ? "nav-item active" : "nav-item"}>
             <span className="nav-ico">
               <Icon size={20} strokeWidth={1.8} />
             </span>
@@ -51,7 +51,7 @@ export function Sidebar() {
       <div className="nav-sep" />
       <Link
         href="/configuracoes"
-        className={`nav-item${isActive("/configuracoes") ? "active" : ""}`}
+        className={isActive("/configuracoes") ? "nav-item active" : "nav-item"}
       >
         <span className="nav-ico">
           <Settings size={20} strokeWidth={1.8} />
