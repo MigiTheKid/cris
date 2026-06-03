@@ -38,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -Command \"try { $up = (Test-Connection -TargetName localhost -TcpPort 3000 -Quiet -TimeoutSeconds 1); if (-not $up) { Start-Process -WindowStyle Hidden pnpm -ArgumentList 'dev' -WorkingDirectory 'C:\\dev\\cris' }; Write-Output 'CRIS dev server: http://localhost:3000' } catch { Write-Output 'CRIS: inicie o dev com pnpm dev' }\""
+            "command": "powershell -NoProfile -Command \"try { $up = (Test-Connection -TargetName localhost -TcpPort 3210 -Quiet -TimeoutSeconds 1); if (-not $up) { Start-Process -WindowStyle Hidden pnpm -ArgumentList 'dev' -WorkingDirectory 'C:\\dev\\cris' }; Write-Output 'CRIS dev server: http://localhost:3210' } catch { Write-Output 'CRIS: inicie o dev com pnpm dev' }\""
           }
         ]
       }

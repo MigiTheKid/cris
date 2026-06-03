@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import "./cris-components.css";
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -40,7 +41,7 @@ export default function RootLayout({
       data-theme="light"
       className={`${display.variable} ${ui.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
+      <body className="min-h-full">
         <Providers>{children}</Providers>
         <Toaster richColors position="bottom-right" />
       </body>

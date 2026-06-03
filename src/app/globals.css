@@ -81,7 +81,10 @@
 
   /* Superfícies / texto (claro) */
   --bg: oklch(0.975 0.006 200);
+  --bg-grad-a: oklch(0.95 0.02 195);
+  --bg-grad-b: oklch(0.98 0.008 210);
   --panel: color-mix(in oklab, white 78%, transparent);
+  --panel-2: color-mix(in oklab, white 92%, transparent);
   --panel-solid: #ffffff;
   --text: oklch(0.27 0.03 210);
   --text-2: oklch(0.42 0.03 210);
@@ -89,6 +92,7 @@
   --hover: color-mix(in oklab, var(--brand-teal) 6%, transparent);
   --border-strong: color-mix(in oklab, var(--brand-teal) 26%, transparent);
   --teal-bright: var(--brand-teal);
+  --glass-blur: 14px;
 
   /* ---- Mapeamento shadcn → marca ---- */
   --background: var(--bg);

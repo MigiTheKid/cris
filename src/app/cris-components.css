@@ -1,0 +1,531 @@
+/* ============================================================
+   CRIS — Componentes (portado do design handoff: components.css)
+   var(--accent) do protótipo → var(--brand-amber) (acento da marca)
+   ============================================================ */
+
+/* ---------- Fundo ---------- */
+.bg-root {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg-base {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 12% 0%, var(--bg-grad-a), transparent 55%),
+    radial-gradient(120% 100% at 100% 100%, var(--bg-grad-b), transparent 60%), var(--bg);
+}
+.bg-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(130% 110% at 50% 20%, transparent 60%, rgba(7, 80, 86, 0.08));
+}
+
+/* ---------- Glass ---------- */
+.glass {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+}
+
+/* ---------- App layout ---------- */
+.app {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 256px minmax(0, 1fr);
+  height: 100vh;
+  width: 100vw;
+  max-width: 100%;
+  overflow: hidden;
+}
+.app-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100vh;
+}
+.app-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 clamp(20px, 3vw, 40px) 60px;
+  scroll-behavior: smooth;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  width: 256px;
+  flex: none;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px 14px;
+  border-right: 1px solid var(--border);
+  position: relative;
+  z-index: 5;
+  background: var(--panel);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+}
+.sidebar-top {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 6px 6px 14px;
+}
+.cris-mark {
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 4px 12px color-mix(in oklab, var(--brand-amber) 30%, transparent));
+}
+.cris-word {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-width: 0;
+}
+.cris-word-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.cris-word-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  color: var(--text);
+}
+.cris-word-logo {
+  width: 96px;
+  height: auto;
+  display: block;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 14px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 0;
+  color: var(--text-2);
+  font-size: 14.5px;
+  font-weight: 600;
+  width: 100%;
+  text-align: left;
+  transition:
+    background 0.18s,
+    color 0.18s;
+}
+.nav-item:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.nav-item.active {
+  color: var(--text);
+  background: color-mix(in oklab, var(--brand-amber) 12%, transparent);
+}
+.nav-item.active .nav-ico {
+  color: var(--brand-amber);
+}
+.nav-ico {
+  flex: none;
+  display: grid;
+  place-items: center;
+  transition: color 0.18s;
+}
+.nav-label {
+  white-space: nowrap;
+  overflow: hidden;
+}
+.nav-rail {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  border-radius: 0 3px 3px 0;
+  background: var(--brand-amber);
+  transition: height 0.22s;
+}
+.nav-item.active .nav-rail {
+  height: 24px;
+}
+.nav-badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 99px;
+  background: var(--crit);
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--crit) 22%, transparent);
+}
+.nav-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 10px 8px;
+}
+.sidebar-foot {
+  margin-top: auto;
+  padding-top: 10px;
+}
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  transition: background 0.18s;
+}
+.user-chip:hover {
+  background: var(--hover);
+}
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  min-width: 0;
+  text-align: left;
+}
+.user-name {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.user-role {
+  font-size: 11px;
+  color: var(--text-3);
+}
+.user-out {
+  margin-left: auto;
+  color: var(--text-3);
+  flex: none;
+}
+
+/* ---------- Topbar ---------- */
+.topbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px clamp(20px, 3vw, 40px) 14px;
+}
+.topbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.clock {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+.clock-time {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.clock-date {
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: capitalize;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 99px;
+  color: var(--text-3);
+  width: 340px;
+  max-width: 32vw;
+}
+.search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+.search input::placeholder {
+  color: var(--text-3);
+}
+.search kbd {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--hover);
+  border: 1px solid var(--border);
+  color: var(--text-3);
+}
+.driverapp-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 99px;
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 650;
+  backdrop-filter: blur(var(--glass-blur));
+  transition:
+    border-color 0.18s,
+    transform 0.12s;
+}
+.driverapp-btn:hover {
+  border-color: var(--brand-amber);
+  transform: translateY(-1px);
+}
+.icon-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text-2);
+  transition:
+    color 0.18s,
+    border-color 0.18s,
+    background 0.18s;
+}
+.icon-btn:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.bell-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  background: var(--crit);
+  color: white;
+  border-radius: 99px;
+  font-size: 10.5px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--bg);
+  font-family: var(--font-mono);
+}
+
+/* ---------- Page header ---------- */
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  padding: 8px 0 22px;
+  flex-wrap: wrap;
+}
+.page-title {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin: 0;
+}
+.page-sub {
+  color: var(--text-2);
+  font-size: 15px;
+  margin-top: 6px;
+}
+.page-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ---------- Buttons (estilo CRIS) ---------- */
+.cbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  font-family: var(--font-ui);
+  transition:
+    transform 0.12s,
+    box-shadow 0.18s,
+    background 0.18s,
+    border-color 0.18s;
+}
+.cbtn:active {
+  transform: translateY(1px) scale(0.99);
+}
+.cbtn.primary {
+  background: var(--brand-amber);
+  color: var(--accent-ink);
+  box-shadow: 0 10px 26px -12px color-mix(in oklab, var(--brand-amber) 80%, transparent);
+}
+.cbtn.ghost {
+  background: var(--panel);
+  border-color: var(--border);
+  color: var(--text);
+  backdrop-filter: blur(var(--glass-blur));
+}
+.cbtn.ghost:hover {
+  border-color: var(--border-strong);
+  background: var(--panel-2);
+}
+
+/* ---------- Status badge / days pill ---------- */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px 5px 9px;
+  border-radius: 99px;
+  font-size: 12.5px;
+  font-weight: 650;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--text-3) 9%, transparent);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.days-pill {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 8px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+  background: color-mix(in oklab, var(--text-3) 10%, transparent);
+}
+.days-pill.warn::before,
+.days-pill.alert::before,
+.days-pill.crit::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+}
+.days-pill.warn::before {
+  background: var(--warn);
+}
+.days-pill.alert::before {
+  background: var(--alert);
+}
+.days-pill.crit::before {
+  background: var(--crit);
+  box-shadow: 0 0 7px var(--crit);
+}
+.days-pill.crit {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* ---------- Plate chip (placa Mercosul) ---------- */
+.plate-chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--panel-2);
+  color: var(--text);
+  position: relative;
+  overflow: hidden;
+}
+.plate-chip::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--brand-teal);
+}
+
+/* ---------- Avatar ---------- */
+.avatar {
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  background: linear-gradient(150deg, hsl(var(--ah) 42% 42%), hsl(calc(var(--ah) + 30) 48% 32%));
+  color: white;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+@media (max-width: 860px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+  }
+  .app {
+    grid-template-columns: 1fr;
+  }
+}

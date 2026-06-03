@@ -1,0 +1,75 @@
+"use client";
+
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { Home, Truck, Users, BarChart3, Settings, LogOut } from "lucide-react";
+import { CrisMark } from "./CrisMark";
+import { Avatar } from "./Avatar";
+
+const NAV = [
+  { href: "/painel", label: "Hoje", icon: Home },
+  { href: "/frota", label: "Frota", icon: Truck },
+  { href: "/motoristas", label: "Motoristas", icon: Users },
+  { href: "/indicadores", label: "Indicadores", icon: BarChart3 },
+] as const;
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+
+  return (
+    <aside className="sidebar">
+      <div className="sidebar-top">
+        <div className="cris-word">
+          <div className="cris-word-row">
+            <CrisMark size={34} />
+            <div className="cris-word-name">CRIS</div>
+          </div>
+          <Image
+            className="cris-word-logo"
+            src="/top-diesel.png"
+            alt="TOP DIESEL"
+            width={96}
+            height={30}
+          />
+        </div>
+      </div>
+
+      <nav className="nav">
+        {NAV.map(({ href, label, icon: Icon }) => (
+          <Link key={href} href={href} className={`nav-item${isActive(href) ? "active" : ""}`}>
+            <span className="nav-ico">
+              <Icon size={20} strokeWidth={1.8} />
+            </span>
+            <span className="nav-label">{label}</span>
+            <span className="nav-rail" />
+          </Link>
+        ))}
+      </nav>
+
+      <div className="nav-sep" />
+      <Link
+        href="/configuracoes"
+        className={`nav-item${isActive("/configuracoes") ? "active" : ""}`}
+      >
+        <span className="nav-ico">
+          <Settings size={20} strokeWidth={1.8} />
+        </span>
+        <span className="nav-label">Configurações</span>
+        <span className="nav-rail" />
+      </Link>
+
+      <div className="sidebar-foot">
+        <button className="user-chip" title="Gabriel · Administrador">
+          <Avatar name="Gabriel Fermino" size={36} hue={188} />
+          <span className="user-meta">
+            <span className="user-name">Gabriel</span>
+            <span className="user-role">Administrador</span>
+          </span>
+          <LogOut size={17} className="user-out" />
+        </button>
+      </div>
+    </aside>
+  );
+}
