@@ -12,6 +12,25 @@ Estado do projeto para retomar a qualquer momento.
   - Admin: CPF `000.000.000-00` / senha `mudar123` (Gabriel Krull) → /painel
   - Motorista: CPF `000.000.001-01` / senha `mudar123` (Daurio) → /motorista
 
+## ⏳ Verificação pendente (Miguel testar no browser)
+
+O preview MCP ficou instável (após conflito de build com o dev), então estes
+itens foram verificados só por typecheck+lint+build — falta o teste de clique:
+
+1. **Detalhe do veículo** (`/frota/[id]`): clicar na placa/seta na Frota abre o
+   detalhe (hero, abas, grid de documentos). Conferir layout.
+2. **Cadastrar/renovar documento**: aba Documentos → "Adicionar documento" (ou 🔄
+   num doc) → preencher tipo/número/emissão/validade → Salvar. Conferir:
+   - o dialog fecha ao salvar;
+   - o status do doc acende certo (verde/amarelo/laranja/vermelho pela validade);
+   - reflete no medidor e nos alertas do **Painel**.
+3. **Pulso da frota** (Painel): hover nas barras mostra o popover (placa, modelo,
+   motorista, doc mais próximo de vencer).
+4. **Coverflow 3D** (Painel): arrastar os carrosséis de frota/motoristas — conferir
+   o "tato" (velocidade, snap, sensação 3D); avisar se quer ajuste.
+
+> Se algo falhar, copiar a mensagem de erro / descrever o comportamento.
+
 ## Feito
 
 - ✅ Scaffold: Next.js 16 + TS strict + Tailwind 4 + shadcn (Base UI) + pnpm.
