@@ -224,10 +224,24 @@
   font-size: 11px;
   color: var(--text-3);
 }
-.user-out {
+.user-chip form {
   margin-left: auto;
+  display: flex;
+}
+.user-out {
   color: var(--text-3);
   flex: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border-radius: 8px;
+}
+.user-out:hover {
+  color: var(--text);
+  background: var(--hover);
 }
 
 /* ---------- Topbar ---------- */

@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { expiryStatus, worstExpiryStatus, type ExpiryStatus } from "@/lib/expiry";
 import type { Database } from "@/lib/database.types";
 
@@ -21,7 +21,7 @@ export type VehicleListItem = {
  * de `vehicle_assignments → profiles`, que tem 2 FKs: driver_id e created_by).
  */
 export async function getVehicleList(): Promise<VehicleListItem[]> {
-  const db = createAdminClient();
+  const db = await createClient();
   const { data, error } = await db
     .from("vehicles")
     .select(

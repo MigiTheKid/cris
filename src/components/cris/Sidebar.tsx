@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Home, Truck, Users, BarChart3, Settings, LogOut } from "lucide-react";
 import { CrisMark } from "./CrisMark";
 import { Avatar } from "./Avatar";
+import { signOut } from "@/lib/actions/auth";
 
 const NAV = [
   { href: "/painel", label: "Hoje", icon: Home },
@@ -14,8 +15,9 @@ const NAV = [
   { href: "/indicadores", label: "Indicadores", icon: BarChart3 },
 ] as const;
 
-export function Sidebar() {
+export function Sidebar({ user }: { user: { name: string; roleLabel: string } }) {
   const pathname = usePathname();
+  const firstName = user.name.split(" ")[0];
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
@@ -61,14 +63,18 @@ export function Sidebar() {
       </Link>
 
       <div className="sidebar-foot">
-        <button className="user-chip" title="Gabriel · Administrador">
-          <Avatar name="Gabriel Fermino" size={36} hue={188} />
+        <div className="user-chip" title={`${user.name} · ${user.roleLabel}`}>
+          <Avatar name={user.name} size={36} hue={188} />
           <span className="user-meta">
-            <span className="user-name">Gabriel</span>
-            <span className="user-role">Administrador</span>
+            <span className="user-name">{firstName}</span>
+            <span className="user-role">{user.roleLabel}</span>
           </span>
-          <LogOut size={17} className="user-out" />
-        </button>
+          <form action={signOut}>
+            <button type="submit" className="user-out" title="Sair" aria-label="Sair">
+              <LogOut size={17} />
+            </button>
+          </form>
+        </div>
       </div>
     </aside>
   );

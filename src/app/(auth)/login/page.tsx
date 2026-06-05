@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useActionState, useState } from "react";
 import Image from "next/image";
 import styles from "./login.module.css";
 import { LoginDots } from "./LoginDots";
+import { signIn } from "@/lib/actions/auth";
 
 function maskCpf(value: string) {
   return value
@@ -16,17 +16,9 @@ function maskCpf(value: string) {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
   const [cpf, setCpf] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    // Auth real (Supabase) entra na próxima fase. Por ora navega ao painel.
-    setTimeout(() => router.push("/painel"), 600);
-  }
+  const [state, formAction, pending] = useActionState(signIn, {});
 
   return (
     <>
@@ -148,7 +140,7 @@ export default function LoginPage() {
             <h2 className={styles.afTitle}>Entrar</h2>
             <p className={styles.afSub}>Acesse o painel da sua frota</p>
 
-            <form onSubmit={onSubmit}>
+            <form action={formAction}>
               <div className={styles.afFields}>
                 <div className={styles.field}>
                   <label htmlFor="cpf">CPF</label>
@@ -200,7 +192,7 @@ export default function LoginPage() {
                     </span>
                     <input
                       id="pw"
-                      name="pw"
+                      name="password"
                       type={showPw ? "text" : "password"}
                       autoComplete="current-password"
                       placeholder="••••••••"
@@ -250,8 +242,10 @@ export default function LoginPage() {
                 </a>
               </div>
 
-              <button type="submit" className={styles.afSubmit} disabled={loading}>
-                {loading ? (
+              {state.error && <div className={styles.afError}>{state.error}</div>}
+
+              <button type="submit" className={styles.afSubmit} disabled={pending}>
+                {pending ? (
                   "Entrando…"
                 ) : (
                   <>

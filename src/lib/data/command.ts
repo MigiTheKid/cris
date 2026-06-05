@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { expiryStatus, daysUntil, worstExpiryStatus } from "@/lib/expiry";
 import { statusTone, type StatusTone } from "@/lib/status";
 import { vehicleTypeLabel, companyLabel, vehicleDocLabel } from "@/lib/labels";
@@ -54,7 +54,7 @@ const FILL: Record<StatusTone, number> = { ok: 100, warn: 80, alert: 60, crit: 4
 
 /** Tudo que o Painel (Centro de Comando) precisa. TEMPORÁRIO: cliente admin (sem RLS). */
 export async function getCommandCenter(): Promise<CommandCenter> {
-  const db = createAdminClient();
+  const db = await createClient();
 
   const { data: vData, error } = await db
     .from("vehicles")

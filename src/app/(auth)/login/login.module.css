@@ -303,6 +303,17 @@
 .afSubmit:active {
   transform: translateY(1px);
 }
+.afError {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--crit);
+  background: color-mix(in oklab, var(--crit) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--crit) 30%, transparent);
+}
+
 .afFirstaccess {
   margin-top: auto;
   padding-top: 26px;
