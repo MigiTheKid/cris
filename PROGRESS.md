@@ -41,10 +41,12 @@ Estado do projeto para retomar a qualquer momento.
 1. Detalhe do veículo + cadastro/edição de documentos (acende status reais; é o
    que torna os dados de amostra desnecessários).
 2. Detalhe do motorista + documentos pessoais.
-3. App do Motorista (mobile) — hoje só o placeholder /motorista.
-4. Polish do design: Coverflow 3D (hoje scroll horizontal) + fundo animado
-   "malha de rotas" em canvas.
-5. Teste de integração de RLS (motorista não vê veículo alheio) — conceito exige.
+3. App do Motorista (mobile) — hoje só o placeholder /motorista. **Miguel vai
+   redesenhar e repensar as funções; deixar por último.**
+4. Teste de integração de RLS (motorista não vê veículo alheio) — conceito exige.
+
+Dashboard HOJE: ✅ COMPLETO (fundo animado "malha de rotas" RouteMesh +
+Coverflow 3D de frota/motoristas com arrasto/setas/teclado).
 
 ## Decisões/gotchas (importante)
 
