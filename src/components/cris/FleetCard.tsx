@@ -17,7 +17,7 @@ export function FleetCard({ v }: { v: FleetCardItem }) {
         <div className="cine-top">
           <span className="cine-comp">{v.companyLabel}</span>
           <span className="cine-light">
-            <span className={`dot ${v.tone}${v.tone === "crit" ? "live" : ""}`} />
+            <span className={v.tone === "crit" ? `dot ${v.tone} live` : `dot ${v.tone}`} />
             {v.statusLabel}
           </span>
         </div>
