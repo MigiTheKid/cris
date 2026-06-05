@@ -1,5 +1,15 @@
 import Link from "next/link";
-import { Truck, Users, Plus, AlertTriangle, CalendarClock, Wrench, ArrowRight } from "lucide-react";
+import {
+  Truck,
+  Users,
+  User,
+  FileText,
+  Plus,
+  AlertTriangle,
+  CalendarClock,
+  Wrench,
+  ArrowRight,
+} from "lucide-react";
 import { getCommandCenter } from "@/lib/data/command";
 import type { StatusTone } from "@/lib/status";
 import { Gauge } from "@/components/cris/Gauge";
@@ -30,6 +40,12 @@ function greeting(h: number) {
   if (h < 12) return "Bom dia.";
   if (h < 18) return "Boa tarde.";
   return "Boa noite.";
+}
+
+function pulseDaysText(days: number | null) {
+  if (days == null) return "—";
+  if (days < 0) return `vencido há ${Math.abs(days)}d`;
+  return `vence em ${days}d`;
 }
 
 export default async function PainelPage() {
@@ -174,6 +190,29 @@ export default async function PainelPage() {
                 <div className="pulse-lbl">
                   <span className="pl-plate">{p.plate}</span>
                   <span className="pl-driver">{p.driverFirst ?? "—"}</span>
+                </div>
+                <div className="pulse-pop">
+                  <div className="pp-top">
+                    <span className={`dot ${p.tone}`} />
+                    <span className="pp-plate">{p.plate}</span>
+                  </div>
+                  <div className="pp-model">
+                    {p.model ?? "—"} · {p.typeLabel}
+                  </div>
+                  <div className="pp-row">
+                    <User size={13} /> {p.driverName ?? "sem motorista"}
+                  </div>
+                  <div className="pp-row">
+                    <FileText size={13} />{" "}
+                    {p.worstDocLabel ? (
+                      <>
+                        {p.worstDocLabel}:{" "}
+                        <span className="mono">{pulseDaysText(p.worstDays)}</span>
+                      </>
+                    ) : (
+                      "sem documentos"
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

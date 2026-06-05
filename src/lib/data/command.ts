@@ -16,8 +16,13 @@ export type AlertItem = {
 export type PulseItem = {
   plate: string;
   driverFirst: string | null;
+  driverName: string | null;
+  model: string | null;
+  typeLabel: string;
   tone: StatusTone;
   fill: number;
+  worstDocLabel: string | null;
+  worstDays: number | null;
 };
 export type FleetCardItem = {
   id: string;
@@ -132,11 +137,23 @@ export async function getCommandCenter(): Promise<CommandCenter> {
       }
     }
 
+    // Pior documento (menor nº de dias) para o popover do pulso.
+    let worstDoc: { docType: VehicleDocType; days: number } | null = null;
+    for (const d of perDoc) {
+      if (!d.date) continue;
+      const days = daysUntil(d.date);
+      if (worstDoc === null || days < worstDoc.days) worstDoc = { docType: d.docType, days };
+    }
     pulse.push({
       plate: v.plate,
       driverFirst: driverName ? driverName.split(" ")[0] : null,
+      driverName,
+      model: v.model,
+      typeLabel,
       tone,
       fill: FILL[tone],
+      worstDocLabel: worstDoc ? vehicleDocLabel(worstDoc.docType) : null,
+      worstDays: worstDoc ? worstDoc.days : null,
     });
     fleet.push({
       id: v.id,
