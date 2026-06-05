@@ -8,7 +8,9 @@ Estado do projeto para retomar a qualquer momento.
 - App: `pnpm dev` → **http://localhost:3210** (porta fixa; a 3000 é de outro projeto).
 - Supabase Studio: http://localhost:54323
 - Re-semear dados de exemplo: `node --env-file=.env.local scripts/seed.mjs`
-- Login de teste: CPF `000.000.000-00` / senha `mudar123` (admin Gabriel Krull) — **auth ainda não conectado**, o botão Entrar só navega.
+- Login (auth REAL funcionando):
+  - Admin: CPF `000.000.000-00` / senha `mudar123` (Gabriel Krull) → /painel
+  - Motorista: CPF `000.000.001-01` / senha `mudar123` (Daurio) → /motorista
 
 ## Feito
 
@@ -28,17 +30,21 @@ Estado do projeto para retomar a qualquer momento.
   cards cinematográficos de frota/motorista, atalhos, ocorrências.
 - ✅ Seed real (`scripts/seed.mjs`): 15 veículos, 9 motoristas, 6 atribuições,
   18 documentos de **amostra** (notes='amostra', Gabriel substitui).
+- ✅ **Auth real (Supabase)**: `src/proxy.ts` (refresh sessão + proteção rotas),
+  server actions signIn/signOut (`src/lib/actions/auth.ts`), login wired,
+  (app) layout com guarda de cargo (driver→/motorista), sidebar com usuário real
+  e Sair. Leituras migradas para o cliente de sessão (RLS por cargo de verdade).
+  Verificado no browser ponta a ponta.
 
 ## Pendências / próximo (ver BACKLOG.md)
 
-1. **Login real (auth Supabase)** — alta prioridade. Hoje tudo lê via cliente
-   admin TEMPORÁRIO (`src/lib/supabase/admin.ts`, service role, ignora RLS).
-   Com login, troca pelo cliente de sessão e a RLS passa a valer de verdade.
-2. Detalhe do veículo + cadastro/edição de documentos (acende status reais).
-3. Detalhe do motorista + documentos pessoais.
-4. App do Motorista (mobile).
-5. Polish do design: Coverflow 3D (hoje scroll horizontal) + fundo animado
+1. Detalhe do veículo + cadastro/edição de documentos (acende status reais; é o
+   que torna os dados de amostra desnecessários).
+2. Detalhe do motorista + documentos pessoais.
+3. App do Motorista (mobile) — hoje só o placeholder /motorista.
+4. Polish do design: Coverflow 3D (hoje scroll horizontal) + fundo animado
    "malha de rotas" em canvas.
+5. Teste de integração de RLS (motorista não vê veículo alheio) — conceito exige.
 
 ## Decisões/gotchas (importante)
 
