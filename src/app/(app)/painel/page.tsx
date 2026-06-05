@@ -5,7 +5,9 @@ import type { StatusTone } from "@/lib/status";
 import { Gauge } from "@/components/cris/Gauge";
 import { ActionNow } from "@/components/cris/ActionNow";
 import { Avatar } from "@/components/cris/Avatar";
-import { StatusBadge } from "@/components/cris/StatusBadge";
+import { Coverflow } from "@/components/cris/Coverflow";
+import { FleetCard } from "@/components/cris/FleetCard";
+import { DriverBigCard } from "@/components/cris/DriverBigCard";
 
 export const dynamic = "force-dynamic";
 
@@ -192,63 +194,11 @@ export default async function PainelPage() {
             Ver todos <ArrowRight size={15} />
           </Link>
         </div>
-        <div className="cine">
+        <Coverflow>
           {cc.fleet.map((v) => (
-            <Link key={v.id} href="/frota" className="cine-card">
-              <div style={{ position: "relative" }}>
-                <div className="thumb" style={{ height: 180 }}>
-                  <div className="thumb-ph">
-                    <Truck size={30} />
-                    <span className="mono">foto do veículo</span>
-                  </div>
-                  <div className="cine-photo-over" />
-                </div>
-                <div className="cine-top">
-                  <span className="cine-comp">{v.companyLabel}</span>
-                  <span className="cine-light">
-                    <span className={`dot ${v.tone}${v.tone === "crit" ? "live" : ""}`} />
-                    {v.statusLabel}
-                  </span>
-                </div>
-                <div className="cine-plate-over">
-                  <div className="p">{v.plate}</div>
-                </div>
-              </div>
-              <div className="cine-body">
-                <div className="cine-model">{v.model ?? "—"}</div>
-                <div className="cine-meta">
-                  {v.typeLabel}
-                  {v.year ? ` · ${v.year}` : ""}
-                </div>
-                <div className="cine-foot">
-                  <span className="who">
-                    {v.driverName ? (
-                      <>
-                        <Avatar name={v.driverName} size={22} />
-                        <span>{v.driverName}</span>
-                      </>
-                    ) : (
-                      <span style={{ color: "var(--text-3)" }}>sem motorista</span>
-                    )}
-                  </span>
-                  <span className="stat">
-                    {v.critCount > 0 ? (
-                      <span style={{ color: "var(--crit)" }}>
-                        {v.critCount} crítico{v.critCount > 1 ? "s" : ""}
-                      </span>
-                    ) : v.attnCount > 0 ? (
-                      <span style={{ color: "var(--warn)" }}>{v.attnCount} atenção</span>
-                    ) : v.docTotal > 0 ? (
-                      <span style={{ color: "var(--ok)" }}>em dia</span>
-                    ) : (
-                      <span style={{ color: "var(--text-3)" }}>sem docs</span>
-                    )}
-                  </span>
-                </div>
-              </div>
-            </Link>
+            <FleetCard key={v.id} v={v} />
           ))}
-        </div>
+        </Coverflow>
       </section>
 
       {/* Motoristas */}
@@ -264,24 +214,11 @@ export default async function PainelPage() {
             Ver todos <ArrowRight size={15} />
           </Link>
         </div>
-        <div className="crew">
+        <Coverflow>
           {cc.crew.map((d) => (
-            <Link key={d.id} href="/motoristas" className="crew-card">
-              <div className="crew-av" style={{ color: TONE_VAR[d.tone] }}>
-                <span className="ring" />
-                <Avatar name={d.name} size={62} />
-              </div>
-              <div className="crew-name">{d.name}</div>
-              <div className="crew-veh">
-                <Truck size={14} />
-                <span className="mono">{d.vehiclePlate ?? "—"}</span>
-              </div>
-              <div style={{ marginTop: 12 }}>
-                <StatusBadge tone={d.tone} label="Sem data" />
-              </div>
-            </Link>
+            <DriverBigCard key={d.id} d={d} />
           ))}
-        </div>
+        </Coverflow>
       </section>
 
       {/* Ocorrências + Atalhos */}

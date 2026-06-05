@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/cris/Sidebar";
 import { Topbar } from "@/components/cris/Topbar";
+import { RouteMesh } from "@/components/cris/RouteMesh";
 import { getCurrentProfile } from "@/lib/auth";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -21,6 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <>
       <div className="bg-root">
         <div className="bg-base" />
+        <RouteMesh />
         <div className="bg-vignette" />
       </div>
 

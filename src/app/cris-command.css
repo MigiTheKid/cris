@@ -906,6 +906,231 @@
   transform: translateX(4px);
 }
 
+/* ============================================================
+   Coverflow 3D (carrossel) — portado de carousel.css
+   ============================================================ */
+.cf {
+  position: relative;
+  padding: 10px 0 4px;
+}
+.cf-stage {
+  position: relative;
+  height: 372px;
+  perspective: 1750px;
+  perspective-origin: 50% 44%;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.cf-stage.grab {
+  cursor: grab;
+}
+.cf-stage.grabbing {
+  cursor: grabbing;
+}
+.cf-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  transition:
+    transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 0.55s ease,
+    filter 0.55s ease;
+}
+.cf-stage.dragging .cf-item {
+  transition: none;
+}
+.cf-item.is-center,
+.cf-item:not(.is-center) {
+  cursor: pointer;
+}
+.cf-veil {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 138%;
+  height: 168%;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 60% 70% at 50% 50%,
+    var(--bg) 0%,
+    var(--bg) 42%,
+    color-mix(in oklab, var(--bg) 60%, transparent) 62%,
+    transparent 84%
+  );
+}
+.cf-floor {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  width: 300px;
+  height: 38px;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    60% 100% at 50% 0%,
+    color-mix(in oklab, var(--brand-teal) 22%, transparent),
+    transparent 72%
+  );
+  filter: blur(7px);
+  opacity: 0.4;
+  pointer-events: none;
+}
+.cf .cine-card {
+  background: var(--panel-solid);
+  transition:
+    box-shadow 0.32s ease,
+    border-color 0.32s ease,
+    transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.cf-item.is-center .cine-card {
+  box-shadow: 0 34px 70px -44px rgba(7, 80, 86, 0.45);
+}
+.cf-item .cine-card:hover {
+  transform: scale(1.03);
+  border-color: color-mix(in oklab, var(--brand-amber) 55%, transparent);
+  box-shadow:
+    0 40px 80px -40px rgba(7, 80, 86, 0.5),
+    0 0 52px -24px color-mix(in oklab, var(--brand-amber) 55%, transparent);
+}
+
+/* card de motorista (photo-forward) */
+.drv-card2 .thumb {
+  height: 172px;
+}
+.dc2-name-over {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: white;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.7);
+}
+.dc2-body {
+  padding: 15px 18px 18px;
+}
+.dc2-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.dc2-meta b {
+  color: var(--text-2);
+  font-weight: 700;
+}
+.dc2-docs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+.dc2-doc {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--text-3) 7%, transparent);
+  border: 1px solid var(--border);
+  min-width: 0;
+}
+.dc2-doc .dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+}
+.dc2-doc .dn {
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dc2-doc .dd {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-3);
+  margin-left: auto;
+  flex: none;
+}
+
+/* controles */
+.cf-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 22px;
+  position: relative;
+  z-index: 3;
+}
+.cf-arrow {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: none;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  backdrop-filter: blur(var(--glass-blur));
+  transition:
+    border-color 0.18s,
+    transform 0.12s,
+    background 0.18s;
+}
+.cf-arrow:hover {
+  border-color: color-mix(in oklab, var(--brand-amber) 55%, transparent);
+  transform: translateY(-1px);
+}
+.cf-arrow:active {
+  transform: scale(0.94);
+}
+.cf-dots {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.cf-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  border: 0;
+  padding: 0;
+  background: color-mix(in oklab, var(--text-3) 45%, transparent);
+  transition:
+    width 0.3s,
+    background 0.3s;
+  cursor: pointer;
+}
+.cf-dot.on {
+  width: 26px;
+  background: var(--brand-amber);
+}
+.cf-counter {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-2);
+  min-width: 58px;
+  text-align: center;
+}
+.cf-counter b {
+  color: var(--text);
+}
+@media (max-width: 560px) {
+  .cf-item {
+    width: 270px;
+  }
+}
+
 /* entrada coreografada */
 @keyframes cmdrise {
   from {
