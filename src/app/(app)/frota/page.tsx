@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FileText, Plus, ChevronRight, Truck } from "lucide-react";
 import { getVehicleList } from "@/lib/data/vehicles";
 import { vehicleTypeLabel, companyLabel } from "@/lib/labels";
@@ -56,9 +57,15 @@ export default async function FrotaPage() {
                   className="group border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--hover)]"
                 >
                   <td className="px-5 py-3.5">
-                    <span className="plate-chip">{v.plate}</span>
+                    <Link href={`/frota/${v.id}`} className="plate-chip">
+                      {v.plate}
+                    </Link>
                   </td>
-                  <td className="px-5 py-3.5 font-semibold text-[var(--text)]">{v.model ?? "—"}</td>
+                  <td className="px-5 py-3.5 font-semibold text-[var(--text)]">
+                    <Link href={`/frota/${v.id}`} className="hover:text-[var(--brand-amber)]">
+                      {v.model ?? "—"}
+                    </Link>
+                  </td>
                   <td className="px-5 py-3.5 text-[var(--text-2)]">
                     {vehicleTypeLabel(v.vehicleType)}
                   </td>
@@ -81,10 +88,16 @@ export default async function FrotaPage() {
                     <StatusBadge tone={tone} label={label} />
                   </td>
                   <td className="px-5 py-3.5 text-right">
-                    <ChevronRight
-                      size={18}
-                      className="text-[var(--text-3)] opacity-0 transition-opacity group-hover:opacity-100"
-                    />
+                    <Link
+                      href={`/frota/${v.id}`}
+                      className="inline-flex"
+                      aria-label={`Abrir ${v.plate}`}
+                    >
+                      <ChevronRight
+                        size={18}
+                        className="text-[var(--text-3)] transition-colors hover:text-[var(--brand-amber)]"
+                      />
+                    </Link>
                   </td>
                 </tr>
               );

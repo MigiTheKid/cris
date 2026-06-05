@@ -42,3 +42,18 @@ const VEHICLE_DOC_LABELS: Record<VehicleDocType, string> = {
 export function vehicleDocLabel(t: VehicleDocType): string {
   return VEHICLE_DOC_LABELS[t] ?? t;
 }
+
+const VEHICLE_DOC_DESC: Record<VehicleDocType, string> = {
+  crlv: "Certificado de Registro e Licenciamento",
+  cipp: "Certificado de Inspeção p/ Produtos Perigosos",
+  inmetro: "Inspeção INMETRO do tanque",
+  tara: "Certificado de Tara",
+  lac: "Licença Ambiental",
+  modal_rodoviario: "Autorização Modal Rodoviário (ANTT)",
+  cert_regularidade: "Certificado de Regularidade",
+  outro: "Outro documento",
+};
+
+export function vehicleDocDesc(t: VehicleDocType): string {
+  return VEHICLE_DOC_DESC[t] ?? "";
+}

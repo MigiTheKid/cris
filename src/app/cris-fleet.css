@@ -1,0 +1,388 @@
+/* ============================================================
+   CRIS — Detalhe do Veículo — portado de fleet.css
+   var(--accent) → var(--brand-amber)
+   ============================================================ */
+.vd-back {
+  margin: 6px 0 18px;
+}
+.vd-hero {
+  display: grid;
+  grid-template-columns: 430px 1fr;
+  gap: 22px;
+}
+.vd-photo {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  height: 300px;
+  box-shadow: 0 34px 80px -48px rgba(7, 80, 86, 0.4);
+}
+.vd-photo .thumb {
+  height: 100%;
+}
+.vd-photo-top {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 2;
+}
+.vd-comp {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: color-mix(in oklab, black 42%, transparent);
+  color: #fff;
+  backdrop-filter: blur(6px);
+}
+.vd-plate-over {
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  z-index: 2;
+}
+.vd-plate-over .p {
+  font-family: var(--font-mono);
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.65);
+}
+.vd-info {
+  background: var(--panel-solid);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 26px 28px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 34px 80px -55px rgba(7, 80, 86, 0.4);
+}
+.vd-info-top {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex-wrap: wrap;
+}
+.vd-info-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+.vd-model {
+  font-size: 17px;
+  color: var(--text-2);
+  margin-top: 10px;
+}
+.vd-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px 22px;
+  margin-top: 24px;
+}
+.vd-meta .k {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  font-weight: 700;
+}
+.vd-meta .v {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.vd-meta .v.mono {
+  font-family: var(--font-mono);
+  font-size: 15px;
+}
+.vd-cta {
+  margin-top: auto;
+  padding-top: 24px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vd-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 28px 0 20px;
+  flex-wrap: wrap;
+}
+.vd-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 15px;
+  border-radius: 12px;
+  background: var(--panel-solid);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-weight: 650;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    color 0.16s,
+    border-color 0.16s,
+    background 0.16s;
+}
+.vd-tab:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.vd-tab.active {
+  background: color-mix(in oklab, var(--brand-amber) 16%, transparent);
+  border-color: color-mix(in oklab, var(--brand-amber) 38%, transparent);
+  color: var(--text);
+}
+.vd-tab .mini {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--crit) 16%, transparent);
+  color: var(--crit);
+}
+.vd-tab .soon {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--text-3) 12%, transparent);
+  color: var(--text-3);
+}
+.vd-tab[data-soon="1"] {
+  opacity: 0.62;
+}
+
+.vd-docs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+}
+.vd-doc {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--panel-solid);
+  border: 1px solid var(--border);
+  transition:
+    border-color 0.18s,
+    box-shadow 0.18s;
+}
+.vd-doc:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 20px 50px -40px rgba(7, 80, 86, 0.4);
+}
+.vd-doc .d-ico {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  background: color-mix(in oklab, var(--text-3) 9%, transparent);
+  color: var(--text-2);
+  position: relative;
+}
+.vd-doc[data-st="crit"] .d-ico {
+  background: color-mix(in oklab, var(--crit) 15%, transparent);
+  color: var(--crit);
+}
+.vd-doc .d-ico .d-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2.5px solid var(--panel-solid);
+}
+.vd-doc .d-main {
+  flex: 1;
+  min-width: 0;
+}
+.vd-doc .d-name {
+  font-weight: 700;
+  font-size: 15px;
+}
+.vd-doc .d-desc {
+  font-size: 12.5px;
+  color: var(--text-3);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.vd-doc .d-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 11px;
+}
+.vd-doc .d-actions {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+.d-mini-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklab, var(--text-3) 8%, transparent);
+  border: 1px solid transparent;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.d-mini-btn:hover {
+  color: var(--brand-amber);
+  border-color: var(--border);
+}
+.vd-doc-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 18px;
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  color: var(--text-2);
+  font-weight: 650;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    border-color 0.18s,
+    color 0.18s;
+}
+.vd-doc-add:hover {
+  border-color: var(--brand-amber);
+  color: var(--text);
+}
+
+.vd-idgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.vd-idcard {
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--panel-solid);
+  border: 1px solid var(--border);
+}
+.vd-idcard .k {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  font-weight: 700;
+}
+.vd-idcard .v {
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+.vd-driver-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--panel-solid);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 460px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s;
+}
+.vd-driver-card:hover {
+  border-color: var(--brand-amber);
+}
+.vd-driver-card .dc-main {
+  flex: 1;
+}
+.vd-driver-card .dc-name {
+  font-weight: 700;
+  font-size: 16px;
+}
+.vd-driver-card .dc-sub {
+  font-size: 12.5px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+.vd-hist {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 13.5px;
+  font-weight: 600;
+  max-width: 460px;
+  margin-bottom: 8px;
+}
+
+.vd-empty {
+  padding: 50px 24px;
+  text-align: center;
+  border-radius: 22px;
+  border: 1px dashed var(--border-strong);
+  background: color-mix(in oklab, var(--panel-solid) 60%, transparent);
+}
+.vd-empty .te-ico {
+  width: 58px;
+  height: 58px;
+  border-radius: 17px;
+  margin: 0 auto 14px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklab, var(--text-3) 9%, transparent);
+  color: var(--text-3);
+}
+.vd-empty h4 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+.vd-empty p {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.vd-empty .soon-tag {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: color-mix(in oklab, var(--info) 15%, transparent);
+  color: var(--info);
+}
+
+@media (max-width: 1000px) {
+  .vd-hero {
+    grid-template-columns: 1fr;
+  }
+  .vd-meta {
+    grid-template-columns: 1fr 1fr;
+  }
+}
