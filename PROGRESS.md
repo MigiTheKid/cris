@@ -12,6 +12,19 @@ Estado do projeto para retomar a qualquer momento.
   - Admin: CPF `000.000.000-00` / senha `mudar123` (Gabriel Krull) → /painel
   - Motorista: CPF `000.000.001-01` / senha `mudar123` (Daurio) → /motorista
 
+## 🔴 Bloqueio atual (10/06 ~17h): Docker Desktop não sobe
+
+- Engine trava na inicialização; janela de erro aparece e fecha (texto não capturado).
+- Já tentado: matar processos + `wsl --shutdown` + relançar (2x). WSL responde,
+  distro `docker-desktop` fica Stopped — engine aborta na subida.
+- **Miguel vai ajustar o Docker manualmente.**
+- Quando o Docker subir, rodar nesta ordem:
+  1. `pnpm exec supabase start`
+  2. `pnpm exec supabase migration up` ← aplica a migration NOVA do Storage
+     (`20260610150000_storage_documents.sql` — bucket + políticas, já commitada)
+  3. `pnpm dev` → testar upload de PDF (cadastrar doc com PDF → status acende →
+     botão 📄 abre o PDF)
+
 ## ⏳ Verificação pendente (Miguel testar no browser)
 
 O preview MCP ficou instável (após conflito de build com o dev), então estes
