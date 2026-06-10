@@ -5,6 +5,7 @@ import { vehicleTypeLabel, companyLabel } from "@/lib/labels";
 import { statusTone } from "@/lib/status";
 import { StatusBadge } from "@/components/cris/StatusBadge";
 import { Avatar } from "@/components/cris/Avatar";
+import { VehicleDialog } from "@/components/cris/VehicleDialog";
 
 // Lê dados ao vivo do banco a cada request (não prerender estático).
 export const dynamic = "force-dynamic";
@@ -25,10 +26,14 @@ export default async function FrotaPage() {
             <FileText size={16} strokeWidth={1.9} />
             Documentos
           </button>
-          <button className="cbtn primary">
-            <Plus size={16} strokeWidth={2.2} />
-            Novo veículo
-          </button>
+          <VehicleDialog
+            trigger={
+              <button className="cbtn primary">
+                <Plus size={16} strokeWidth={2.2} />
+                Novo veículo
+              </button>
+            }
+          />
         </div>
       </div>
 

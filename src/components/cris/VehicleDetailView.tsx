@@ -12,6 +12,7 @@ import {
   User,
   RefreshCw,
   Plus,
+  Pencil,
   Droplet,
   Disc,
   Wrench,
@@ -21,6 +22,7 @@ import {
 import { Avatar } from "./Avatar";
 import { StatusBadge } from "./StatusBadge";
 import { DocumentDialog } from "./DocumentDialog";
+import { VehicleDialog } from "./VehicleDialog";
 import { vehicleDocLabel, vehicleDocDesc } from "@/lib/labels";
 import type { StatusTone } from "@/lib/status";
 import type { VehicleDetail, VehicleDoc } from "@/lib/data/vehicle-detail";
@@ -125,6 +127,23 @@ export function VehicleDetailView({ detail }: { detail: VehicleDetail }) {
               trigger={
                 <button className="cbtn primary">
                   <Plus size={16} /> Adicionar documento
+                </button>
+              }
+            />
+            <VehicleDialog
+              initial={{
+                id: detail.id,
+                plate: detail.plate,
+                model: detail.model,
+                year: detail.year,
+                vehicleType: detail.vehicleType,
+                capacity: detail.capacity,
+                companyKind: detail.companyKind,
+                status: detail.vehicleStatus,
+              }}
+              trigger={
+                <button className="cbtn ghost">
+                  <Pencil size={16} /> Editar dados
                 </button>
               }
             />

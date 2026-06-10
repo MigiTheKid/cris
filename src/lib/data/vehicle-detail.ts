@@ -34,6 +34,7 @@ export type VehicleDetail = {
   capacity: string | null;
   companyKind: Database["public"]["Enums"]["company_kind"];
   companyLabel: string;
+  vehicleStatus: Database["public"]["Enums"]["vehicle_status"];
   tone: StatusTone;
   statusLabel: string;
   driverId: string | null;
@@ -61,7 +62,7 @@ export async function getVehicleDetail(id: string): Promise<VehicleDetail | null
   const { data: v } = await db
     .from("vehicles")
     .select(
-      `id, plate, model, vehicle_type, year, capacity,
+      `id, plate, model, vehicle_type, year, capacity, status,
        company:companies(kind),
        documents:vehicle_documents(id, doc_type, doc_number, issued_at, expires_at, file_path, deleted_at)`,
     )
@@ -141,6 +142,7 @@ export async function getVehicleDetail(id: string): Promise<VehicleDetail | null
     capacity: v.capacity,
     companyKind: v.company?.kind ?? "top_diesel",
     companyLabel: companyLabel(v.company?.kind ?? "top_diesel"),
+    vehicleStatus: v.status,
     tone: worstTone,
     statusLabel,
     driverId: current?.driver_id ?? null,
