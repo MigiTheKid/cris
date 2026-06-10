@@ -4,11 +4,11 @@ import { statusTone, type StatusTone } from "@/lib/status";
 import { vehicleTypeLabel, companyLabel } from "@/lib/labels";
 import type { Database } from "@/lib/database.types";
 
-type VehicleDocType = Database["public"]["Enums"]["vehicle_doc_type"];
-
 export type VehicleDoc = {
   id: string;
-  docType: VehicleDocType;
+  docType: string;
+  docLabel: string;
+  docDescription: string | null;
   docNumber: string | null;
   issuedAt: string | null;
   expiresAt: string | null;
@@ -44,17 +44,6 @@ export type VehicleDetail = {
   history: AssignmentHistory[];
 };
 
-const DOC_ORDER: VehicleDocType[] = [
-  "crlv",
-  "cipp",
-  "inmetro",
-  "tara",
-  "lac",
-  "modal_rodoviario",
-  "cert_regularidade",
-  "outro",
-];
-
 /** Detalhe completo de um veículo (ou null). Cliente de sessão (RLS por cargo). */
 export async function getVehicleDetail(id: string): Promise<VehicleDetail | null> {
   const db = await createClient();
@@ -64,14 +53,15 @@ export async function getVehicleDetail(id: string): Promise<VehicleDetail | null
     .select(
       `id, plate, model, vehicle_type, year, capacity, status,
        company:companies(kind),
-       documents:vehicle_documents(id, doc_type, doc_number, issued_at, expires_at, file_path, deleted_at)`,
+       documents:vehicle_documents(id, doc_type, doc_number, issued_at, expires_at, file_path, deleted_at,
+         dt:document_types(label, description, sort))`,
     )
     .eq("id", id)
     .is("deleted_at", null)
     .maybeSingle();
   if (!v) return null;
 
-  // Documentos (com status derivado), ordenados pela ordem canônica.
+  // Documentos (com status derivado), ordenados pelo `sort` do catálogo.
   const docs: VehicleDoc[] = (v.documents ?? [])
     .filter((d) => !d.deleted_at)
     .map((d) => {
@@ -81,6 +71,8 @@ export async function getVehicleDetail(id: string): Promise<VehicleDetail | null
       return {
         id: d.id,
         docType: d.doc_type,
+        docLabel: d.dt?.label ?? d.doc_type,
+        docDescription: d.dt?.description ?? null,
         docNumber: d.doc_number,
         issuedAt: d.issued_at,
         expiresAt: d.expires_at,
@@ -88,9 +80,15 @@ export async function getVehicleDetail(id: string): Promise<VehicleDetail | null
         tone,
         statusLabel: label,
         days: date ? daysUntil(date) : null,
+        _sort: d.dt?.sort ?? 999,
       };
     })
-    .sort((a, b) => DOC_ORDER.indexOf(a.docType) - DOC_ORDER.indexOf(b.docType));
+    .sort((a, b) => a._sort - b._sort)
+    .map((d) => {
+      const { _sort, ...doc } = d;
+      void _sort;
+      return doc;
+    });
 
   const worstTone = docs.reduce<StatusTone>((w, d) => {
     const rank = { idle: 0, ok: 1, warn: 2, alert: 3, crit: 4 } as const;

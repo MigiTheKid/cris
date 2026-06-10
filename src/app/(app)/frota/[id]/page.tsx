@@ -1,12 +1,21 @@
 import { notFound } from "next/navigation";
 import { getVehicleDetail } from "@/lib/data/vehicle-detail";
+import { getDocumentTypes } from "@/lib/data/document-types";
 import { VehicleDetailView } from "@/components/cris/VehicleDetailView";
 
 export const dynamic = "force-dynamic";
 
 export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const detail = await getVehicleDetail(id);
+  const [detail, docTypes] = await Promise.all([
+    getVehicleDetail(id),
+    getDocumentTypes("vehicle", true),
+  ]);
   if (!detail) notFound();
-  return <VehicleDetailView detail={detail} />;
+  return (
+    <VehicleDetailView
+      detail={detail}
+      docTypes={docTypes.map((t) => ({ key: t.key, label: t.label }))}
+    />
+  );
 }

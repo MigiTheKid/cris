@@ -21,14 +21,10 @@ import {
 } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { StatusBadge } from "./StatusBadge";
-import { DocumentDialog } from "./DocumentDialog";
+import { DocumentDialog, type DocTypeOption } from "./DocumentDialog";
 import { VehicleDialog } from "./VehicleDialog";
-import { vehicleDocLabel, vehicleDocDesc } from "@/lib/labels";
 import type { StatusTone } from "@/lib/status";
 import type { VehicleDetail, VehicleDoc } from "@/lib/data/vehicle-detail";
-import type { Database } from "@/lib/database.types";
-
-type VehicleDocType = Database["public"]["Enums"]["vehicle_doc_type"];
 
 const TONE_VAR: Record<StatusTone, string> = {
   ok: "var(--ok)",
@@ -38,7 +34,8 @@ const TONE_VAR: Record<StatusTone, string> = {
   idle: "var(--idle)",
 };
 
-const DOC_ICON: Record<VehicleDocType, typeof FileText> = {
+// Ícone por chave conhecida; tipos novos do catálogo caem no FileText.
+const DOC_ICON: Record<string, typeof FileText> = {
   crlv: FileText,
   cipp: Shield,
   inmetro: Gauge,
@@ -63,7 +60,13 @@ function daysText(days: number | null) {
   return `${days}d`;
 }
 
-export function VehicleDetailView({ detail }: { detail: VehicleDetail }) {
+export function VehicleDetailView({
+  detail,
+  docTypes,
+}: {
+  detail: VehicleDetail;
+  docTypes: DocTypeOption[];
+}) {
   const [tab, setTab] = useState<string>("docs");
   const critDocs = detail.docs.filter((d) => d.tone === "crit").length;
 
@@ -124,6 +127,7 @@ export function VehicleDetailView({ detail }: { detail: VehicleDetail }) {
           <div className="vd-cta">
             <DocumentDialog
               vehicleId={detail.id}
+              docTypes={docTypes}
               trigger={
                 <button className="cbtn primary">
                   <Plus size={16} /> Adicionar documento
@@ -186,10 +190,11 @@ export function VehicleDetailView({ detail }: { detail: VehicleDetail }) {
         {tab === "docs" && (
           <div className="vd-docs">
             {detail.docs.map((d) => (
-              <DocCard key={d.id} doc={d} vehicleId={detail.id} />
+              <DocCard key={d.id} doc={d} vehicleId={detail.id} docTypes={docTypes} />
             ))}
             <DocumentDialog
               vehicleId={detail.id}
+              docTypes={docTypes}
               trigger={
                 <button className="vd-doc-add">
                   <Plus size={18} /> Adicionar documento
@@ -269,7 +274,15 @@ export function VehicleDetailView({ detail }: { detail: VehicleDetail }) {
   );
 }
 
-function DocCard({ doc, vehicleId }: { doc: VehicleDoc; vehicleId: string }) {
+function DocCard({
+  doc,
+  vehicleId,
+  docTypes,
+}: {
+  doc: VehicleDoc;
+  vehicleId: string;
+  docTypes: DocTypeOption[];
+}) {
   const Ico = DOC_ICON[doc.docType] ?? FileText;
   return (
     <div className="vd-doc" data-st={doc.tone}>
@@ -278,8 +291,8 @@ function DocCard({ doc, vehicleId }: { doc: VehicleDoc; vehicleId: string }) {
         <span className="d-dot" style={{ background: TONE_VAR[doc.tone] }} />
       </span>
       <div className="d-main">
-        <div className="d-name">{vehicleDocLabel(doc.docType)}</div>
-        <div className="d-desc">{vehicleDocDesc(doc.docType)}</div>
+        <div className="d-name">{doc.docLabel}</div>
+        <div className="d-desc">{doc.docDescription}</div>
         <div className="d-foot">
           <span className={`days-pill ${doc.tone}`}>{daysText(doc.days)}</span>
         </div>
@@ -298,6 +311,7 @@ function DocCard({ doc, vehicleId }: { doc: VehicleDoc; vehicleId: string }) {
         )}
         <DocumentDialog
           vehicleId={vehicleId}
+          docTypes={docTypes}
           initial={{
             id: doc.id,
             docType: doc.docType,

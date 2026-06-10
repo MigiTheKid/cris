@@ -1,10 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { expiryStatus, daysUntil, worstExpiryStatus } from "@/lib/expiry";
 import { statusTone, type StatusTone } from "@/lib/status";
-import { vehicleTypeLabel, companyLabel, vehicleDocLabel } from "@/lib/labels";
-import type { Database } from "@/lib/database.types";
-
-type VehicleDocType = Database["public"]["Enums"]["vehicle_doc_type"];
+import { vehicleTypeLabel, companyLabel } from "@/lib/labels";
 
 export type AlertItem = {
   docLabel: string;
@@ -67,7 +64,7 @@ export async function getCommandCenter(): Promise<CommandCenter> {
       `id, plate, model, vehicle_type, year,
        company:companies(kind),
        assignments:vehicle_assignments(driver_id, unassigned_at),
-       documents:vehicle_documents(doc_type, expires_at, deleted_at)`,
+       documents:vehicle_documents(doc_type, expires_at, deleted_at, dt:document_types(label))`,
     )
     .is("deleted_at", null)
     .order("plate");
@@ -101,7 +98,7 @@ export async function getCommandCenter(): Promise<CommandCenter> {
     const docs = (v.documents ?? []).filter((d) => !d.deleted_at);
     const perDoc = docs.map((d) => {
       const date = d.expires_at ? new Date(d.expires_at) : null;
-      return { docType: d.doc_type as VehicleDocType, date, status: expiryStatus(date) };
+      return { docLabel: d.dt?.label ?? d.doc_type, date, status: expiryStatus(date) };
     });
     const worst = worstExpiryStatus(perDoc.map((d) => d.status));
     const { tone, label } = statusTone(worst);
@@ -121,7 +118,7 @@ export async function getCommandCenter(): Promise<CommandCenter> {
         criticos += 1;
         if (d.date)
           alerts.push({
-            docLabel: vehicleDocLabel(d.docType),
+            docLabel: d.docLabel,
             plate: v.plate,
             model: v.model,
             typeLabel,
@@ -138,11 +135,11 @@ export async function getCommandCenter(): Promise<CommandCenter> {
     }
 
     // Pior documento (menor nº de dias) para o popover do pulso.
-    let worstDoc: { docType: VehicleDocType; days: number } | null = null;
+    let worstDoc: { docLabel: string; days: number } | null = null;
     for (const d of perDoc) {
       if (!d.date) continue;
       const days = daysUntil(d.date);
-      if (worstDoc === null || days < worstDoc.days) worstDoc = { docType: d.docType, days };
+      if (worstDoc === null || days < worstDoc.days) worstDoc = { docLabel: d.docLabel, days };
     }
     pulse.push({
       plate: v.plate,
@@ -152,7 +149,7 @@ export async function getCommandCenter(): Promise<CommandCenter> {
       typeLabel,
       tone,
       fill: FILL[tone],
-      worstDocLabel: worstDoc ? vehicleDocLabel(worstDoc.docType) : null,
+      worstDocLabel: worstDoc ? worstDoc.docLabel : null,
       worstDays: worstDoc ? worstDoc.days : null,
     });
     fleet.push({

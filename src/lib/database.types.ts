@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -161,6 +161,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      document_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          is_active: boolean
+          key: string
+          label: string
+          scope: string
+          sort: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          is_active?: boolean
+          key: string
+          label: string
+          scope?: string
+          sort?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          is_active?: boolean
+          key?: string
+          label?: string
+          scope?: string
+          sort?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       driver_documents: {
         Row: {
@@ -371,7 +404,7 @@ export type Database = {
           created_by: string | null
           deleted_at: string | null
           doc_number: string | null
-          doc_type: Database["public"]["Enums"]["vehicle_doc_type"]
+          doc_type: string
           expires_at: string | null
           file_path: string | null
           id: string
@@ -385,7 +418,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           doc_number?: string | null
-          doc_type: Database["public"]["Enums"]["vehicle_doc_type"]
+          doc_type: string
           expires_at?: string | null
           file_path?: string | null
           id?: string
@@ -399,7 +432,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           doc_number?: string | null
-          doc_type?: Database["public"]["Enums"]["vehicle_doc_type"]
+          doc_type?: string
           expires_at?: string | null
           file_path?: string | null
           id?: string
@@ -415,6 +448,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_documents_doc_type_fkey"
+            columns: ["doc_type"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["key"]
           },
           {
             foreignKeyName: "vehicle_documents_vehicle_id_fkey"

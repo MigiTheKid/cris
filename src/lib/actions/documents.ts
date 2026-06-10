@@ -2,20 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/database.types";
-
-type VehicleDocType = Database["public"]["Enums"]["vehicle_doc_type"];
-
-const DOC_TYPES: VehicleDocType[] = [
-  "crlv",
-  "cipp",
-  "inmetro",
-  "tara",
-  "lac",
-  "modal_rodoviario",
-  "cert_regularidade",
-  "outro",
-];
 
 export type DocFormState = { error?: string; ok?: boolean };
 
@@ -33,14 +19,14 @@ export async function saveVehicleDocument(
 ): Promise<DocFormState> {
   const id = String(formData.get("id") ?? "").trim();
   const vehicleId = String(formData.get("vehicleId") ?? "").trim();
-  const docType = String(formData.get("docType") ?? "").trim() as VehicleDocType;
+  const docType = String(formData.get("docType") ?? "").trim();
   const docNumber = String(formData.get("docNumber") ?? "").trim() || null;
   const issuedAt = cleanDate(formData.get("issuedAt"));
   const expiresAt = cleanDate(formData.get("expiresAt"));
   const file = formData.get("file");
 
   if (!vehicleId) return { error: "Veículo inválido." };
-  if (!DOC_TYPES.includes(docType)) return { error: "Selecione o tipo de documento." };
+  if (!docType) return { error: "Selecione o tipo de documento." };
   if (issuedAt && expiresAt && expiresAt < issuedAt)
     return { error: "A validade não pode ser anterior à emissão." };
 
@@ -64,7 +50,7 @@ export async function saveVehicleDocument(
 
   const payload: {
     vehicle_id: string;
-    doc_type: VehicleDocType;
+    doc_type: string;
     doc_number: string | null;
     issued_at: string | null;
     expires_at: string | null;

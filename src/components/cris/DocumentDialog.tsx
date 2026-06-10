@@ -12,26 +12,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import Link from "next/link";
 import { saveVehicleDocument } from "@/lib/actions/documents";
-import { vehicleDocLabel } from "@/lib/labels";
-import type { Database } from "@/lib/database.types";
 
-type VehicleDocType = Database["public"]["Enums"]["vehicle_doc_type"];
-
-const DOC_TYPES: VehicleDocType[] = [
-  "crlv",
-  "cipp",
-  "inmetro",
-  "tara",
-  "lac",
-  "modal_rodoviario",
-  "cert_regularidade",
-  "outro",
-];
+export type DocTypeOption = { key: string; label: string };
 
 export type DocInitial = {
   id?: string;
-  docType?: VehicleDocType;
+  docType?: string;
   docNumber?: string | null;
   issuedAt?: string | null;
   expiresAt?: string | null;
@@ -47,10 +35,12 @@ export function DocumentDialog({
   vehicleId,
   trigger,
   initial,
+  docTypes,
 }: {
   vehicleId: string;
   trigger: ReactElement;
   initial?: DocInitial;
+  docTypes: DocTypeOption[];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -82,9 +72,17 @@ export function DocumentDialog({
           {initial?.id && <input type="hidden" name="id" value={initial.id} />}
 
           <div className={field}>
-            <label htmlFor="docType" className={labelCls}>
-              Tipo
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="docType" className={labelCls}>
+                Tipo
+              </label>
+              <Link
+                href="/configuracoes"
+                className="text-[11px] font-semibold text-[var(--teal-bright)] hover:text-[var(--brand-amber)]"
+              >
+                Gerenciar tipos
+              </Link>
+            </div>
             <select
               id="docType"
               name="docType"
@@ -96,9 +94,9 @@ export function DocumentDialog({
               <option value="" disabled>
                 Selecione…
               </option>
-              {DOC_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {vehicleDocLabel(t)}
+              {docTypes.map((t) => (
+                <option key={t.key} value={t.key}>
+                  {t.label}
                 </option>
               ))}
             </select>
