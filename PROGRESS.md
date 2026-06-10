@@ -12,18 +12,14 @@ Estado do projeto para retomar a qualquer momento.
   - Admin: CPF `000.000.000-00` / senha `mudar123` (Gabriel Krull) → /painel
   - Motorista: CPF `000.000.001-01` / senha `mudar123` (Daurio) → /motorista
 
-## 🔴 Bloqueio atual (10/06 ~17h): Docker Desktop não sobe
+## ✅ Docker resolvido + Upload de PDF VERIFICADO (10/06)
 
-- Engine trava na inicialização; janela de erro aparece e fecha (texto não capturado).
-- Já tentado: matar processos + `wsl --shutdown` + relançar (2x). WSL responde,
-  distro `docker-desktop` fica Stopped — engine aborta na subida.
-- **Miguel vai ajustar o Docker manualmente.**
-- Quando o Docker subir, rodar nesta ordem:
-  1. `pnpm exec supabase start`
-  2. `pnpm exec supabase migration up` ← aplica a migration NOVA do Storage
-     (`20260610150000_storage_documents.sql` — bucket + políticas, já commitada)
-  3. `pnpm dev` → testar upload de PDF (cadastrar doc com PDF → status acende →
-     botão 📄 abre o PDF)
+- Docker voltou (engine 29.5.3 — era atualização pendente). Migration do Storage aplicada.
+- **Upload de PDF testado de ponta a ponta via preview**: login admin → detalhe do
+  AUH-6B05 → dialog → CIPP (validade 24/06/2026) com PDF anexado → salvou, dialog
+  fechou, botão 📄 Ver PDF apareceu, arquivo confirmado no Storage (%PDF- íntegro).
+- Ficou um **CIPP de teste** no AUH-6B05 (PDF de 199 bytes) — clicar no 📄 pra ver
+  abrir; depois substituir pelos dados reais.
 
 ## ⏳ Verificação pendente (Miguel testar no browser)
 
