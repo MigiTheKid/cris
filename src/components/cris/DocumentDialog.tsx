@@ -144,6 +144,20 @@ export function DocumentDialog({
             </div>
           </div>
 
+          <div className={field}>
+            <label htmlFor="file" className={labelCls}>
+              PDF do documento {isEdit ? "(opcional — substitui o atual)" : "(opcional)"}
+            </label>
+            <input
+              id="file"
+              name="file"
+              type="file"
+              accept="application/pdf"
+              className="text-sm text-[var(--text-2)] file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-[color-mix(in_oklab,var(--brand-amber)_18%,transparent)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--text)]"
+            />
+            <span className="text-[11px] text-[var(--text-3)]">Somente PDF, até 10 MB.</span>
+          </div>
+
           {state.error && (
             <div className="rounded-xl border border-[color-mix(in_oklab,var(--crit)_30%,transparent)] bg-[color-mix(in_oklab,var(--crit)_12%,transparent)] px-3 py-2 text-sm font-semibold text-[var(--crit)]">
               {state.error}

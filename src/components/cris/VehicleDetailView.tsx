@@ -266,6 +266,17 @@ function DocCard({ doc, vehicleId }: { doc: VehicleDoc; vehicleId: string }) {
         </div>
       </div>
       <div className="d-actions">
+        {doc.filePath && (
+          <a
+            href={`/api/documents/${doc.id}/pdf`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="d-mini-btn"
+            title="Ver PDF"
+          >
+            <FileText size={16} />
+          </a>
+        )}
         <DocumentDialog
           vehicleId={vehicleId}
           initial={{
