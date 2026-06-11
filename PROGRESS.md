@@ -12,6 +12,27 @@ Estado do projeto para retomar a qualquer momento.
   - Admin: CPF `000.000.000-00` / senha `mudar123` (Gabriel Krull) → /painel
   - Motorista: CPF `000.000.001-01` / senha `mudar123` (Daurio) → /motorista
 
+## ✅ M2 PNEUS — Fase 2: rodízio + recapagem + linha da vida (11/06)
+
+- **Rodízio em 1 passo**: function SQL `move_tire` (atômica — nunca deixa pneu
+  no limbo): move pra posição livre OU **troca** os dois pneus se ocupada, nos
+  dois sentidos do conjunto (cavalo ⇄ reboque). `RodizioDialog` no painel do
+  rodado lista todas as posições ("Posição livre" / "Trocar com o fogo X") + km.
+- **Recapagem/conserto com custo**: botão **Receber** na página /pneus para
+  pneus "Na recapadora"/"Em conserto" → `TireReturnDialog` (sulco da recapagem,
+  custo, recapadora/oficina) → recapReturn (vida+1) / repairReturn (estoque).
+- **Sucata com motivo**: destino Sucata no RemoveTireDialog abre campo de motivo
+  → evento `sucateamento` com notes (causa-raiz pras análises da Fase 3).
+- **Linha da vida** `/pneus/[id]`: hero (fogo, vida, status, onde está) + KPIs
+  (sulco atual/da vida, **km registrada** somada das instalações, **custo
+  acumulado** compra+recapes+consertos, nº aferições) + timeline unificada
+  (compra → instalações/remoções com km → aferições → recapagem/conserto/sucata
+  com custos). Fogo na tabela /pneus e botão Histórico no rodado linkam pra cá.
+- **Verificado e2e no browser** (com os pneus reais do Miguel, restaurados ao
+  estado original depois): mover 151 1E→1D; swap 151⇄150 entre RAA e MMJ com km
+  292.500 nos dois lados; receber 998 da recapadora (2ª vida, R$ 650); linha da
+  vida com km 41.000 e custo R$ 3.130 calculados; sucata com motivo registrada.
+
 ## ✅ Pneus: limiares de sulco configuráveis (11/06)
 
 - Migration `20260611130000_app_settings.sql`: tabela `app_settings` (chave/valor

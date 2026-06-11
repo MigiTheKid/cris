@@ -13,7 +13,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { saveAxleLayout, installTire, removeTire, recordReading } from "@/lib/actions/tires";
+import {
+  saveAxleLayout,
+  installTire,
+  removeTire,
+  recordReading,
+  moveTire,
+} from "@/lib/actions/tires";
 import {
   AXLE_PRESETS,
   AXLE_KIND_LABEL,
@@ -21,7 +27,7 @@ import {
   type AxleKind,
   type TireThresholds,
 } from "@/lib/tires";
-import type { StockTire } from "@/lib/data/tires";
+import type { StockTire, VehicleRodado } from "@/lib/data/tires";
 
 const field = "flex flex-col gap-1.5";
 const labelCls = "text-xs font-bold text-[var(--text-2)]";
@@ -299,6 +305,7 @@ export function RemoveTireDialog({
   positionLabel: string;
 }) {
   const [state, formAction, pending] = useActionState(removeTire, {});
+  const [dest, setDest] = useState("estoque");
   useCloseOnOk(state.ok, onOpenChange);
 
   return (
@@ -318,7 +325,13 @@ export function RemoveTireDialog({
             <label htmlFor="rt-dest" className={labelCls}>
               Destino
             </label>
-            <select id="rt-dest" name="destination" defaultValue="estoque" className={inputCls}>
+            <select
+              id="rt-dest"
+              name="destination"
+              value={dest}
+              onChange={(e) => setDest(e.target.value)}
+              className={inputCls}
+            >
               {DESTINATIONS.map((d) => (
                 <option key={d.value} value={d.value}>
                   {d.label}
@@ -326,6 +339,20 @@ export function RemoveTireDialog({
               ))}
             </select>
           </div>
+
+          {dest === "sucateado" && (
+            <div className={field}>
+              <label htmlFor="rt-reason" className={labelCls}>
+                Motivo da sucata
+              </label>
+              <input
+                id="rt-reason"
+                name="reason"
+                className={inputCls}
+                placeholder="ex.: estouro na BR-470, carcaça condenada…"
+              />
+            </div>
+          )}
 
           <div className={field}>
             <label htmlFor="rt-km" className={labelCls}>
@@ -435,6 +462,120 @@ export function ReadingDialog({
             />
             <button type="submit" className="cbtn primary" disabled={pending}>
               {pending ? "Salvando…" : "Registrar"}
+            </button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ---------------- Rodízio (mover / trocar) ---------------- */
+
+export function RodizioDialog({
+  open,
+  onOpenChange,
+  installationId,
+  fireNumber,
+  currentCode,
+  currentUnitIndex,
+  rodados,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  installationId: string;
+  fireNumber: string;
+  currentCode: string;
+  currentUnitIndex: number;
+  rodados: VehicleRodado[];
+}) {
+  const [target, setTarget] = useState<string>(""); // "vehicleId|axle|side|dual"
+  const [state, formAction, pending] = useActionState(moveTire, {});
+  useCloseOnOk(state.ok, onOpenChange);
+
+  useEffect(() => {
+    if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTarget("");
+    }
+  }, [open]);
+
+  const [tVehicle, tAxle, tSide, tDual] = target.split("|");
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Rodízio do pneu {fireNumber}</DialogTitle>
+          <DialogDescription>
+            Escolha o destino. Posição ocupada = os dois pneus <strong>trocam</strong> de lugar.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form action={formAction} className="space-y-4">
+          <input type="hidden" name="installationId" value={installationId} />
+          <input type="hidden" name="targetVehicleId" value={tVehicle ?? ""} />
+          <input type="hidden" name="targetAxle" value={tAxle ?? ""} />
+          <input type="hidden" name="targetSide" value={tSide ?? ""} />
+          <input type="hidden" name="targetDual" value={tDual ?? ""} />
+
+          <div className="flex max-h-[44vh] flex-col gap-1.5 overflow-y-auto pr-1">
+            {rodados.map((r, unitIndex) =>
+              r.axles.flatMap((axle) =>
+                axle.positions.map((pos) => {
+                  const isSelf = unitIndex === currentUnitIndex && pos.code === currentCode;
+                  if (isSelf) return null;
+                  const key = `${r.vehicleId}|${pos.axleNumber}|${pos.side}|${pos.dualPos ?? ""}`;
+                  const isSel = target === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setTarget(key)}
+                      className={
+                        isSel
+                          ? "flex items-center gap-3 rounded-xl border border-[var(--brand-amber)] bg-[color-mix(in_oklab,var(--brand-amber)_10%,transparent)] px-3 py-2.5 text-left"
+                          : "flex items-center gap-3 rounded-xl border border-[var(--border)] px-3 py-2.5 text-left hover:bg-[var(--hover)]"
+                      }
+                    >
+                      <span className="mono grid size-9 place-items-center rounded-lg bg-[var(--panel-solid)] text-xs font-bold text-[var(--text-2)]">
+                        {pos.code}
+                      </span>
+                      <span className="flex-1">
+                        <span className="block text-sm font-semibold text-[var(--text)]">
+                          {r.plate} · {pos.label}
+                        </span>
+                        <span className="block text-xs text-[var(--text-3)]">
+                          {pos.tire ? `Trocar com o fogo ${pos.tire.fireNumber}` : "Posição livre"}
+                        </span>
+                      </span>
+                      {isSel && <Check size={18} className="text-[var(--brand-amber)]" />}
+                    </button>
+                  );
+                }),
+              ),
+            )}
+          </div>
+
+          <div className={field}>
+            <label htmlFor="rz-km" className={labelCls}>
+              Km atual do veículo (opcional)
+            </label>
+            <input id="rz-km" name="vehicleKm" inputMode="numeric" className={inputCls} />
+          </div>
+
+          {state.error && <div className={errBox}>{state.error}</div>}
+
+          <DialogFooter>
+            <DialogClose
+              render={
+                <button type="button" className="cbtn ghost">
+                  Cancelar
+                </button>
+              }
+            />
+            <button type="submit" className="cbtn primary" disabled={pending || !target}>
+              {pending ? "Movendo…" : "Confirmar rodízio"}
             </button>
           </DialogFooter>
         </form>

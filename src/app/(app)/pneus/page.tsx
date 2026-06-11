@@ -5,6 +5,7 @@ import { getTireThresholds } from "@/lib/data/settings";
 import { TIRE_STATUS_LABEL } from "@/lib/tires";
 import { StatusBadge } from "@/components/cris/StatusBadge";
 import { TireDialog } from "@/components/cris/TireDialog";
+import { TireReturnDialog } from "@/components/cris/TireReturnDialog";
 
 export const dynamic = "force-dynamic";
 
@@ -111,8 +112,14 @@ export default async function PneusPage() {
                 className="border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--hover)]"
                 style={{ opacity: t.status === "sucateado" || t.status === "vendido" ? 0.5 : 1 }}
               >
-                <td className="mono px-5 py-3 text-base font-bold text-[var(--text)]">
-                  {t.fireNumber}
+                <td className="px-5 py-3">
+                  <Link
+                    href={`/pneus/${t.id}`}
+                    className="mono text-base font-bold text-[var(--text)] hover:text-[var(--brand-amber)]"
+                    title="Linha da vida do pneu"
+                  >
+                    {t.fireNumber}
+                  </Link>
                 </td>
                 <td className="px-5 py-3 text-sm text-[var(--text-2)]">
                   {[t.brand, t.model].filter(Boolean).join(" ") || "—"}
@@ -152,6 +159,14 @@ export default async function PneusPage() {
                   />
                 </td>
                 <td className="px-5 py-3 text-right">
+                  {(t.status === "recapagem" || t.status === "conserto") && (
+                    <TireReturnDialog
+                      tireId={t.id}
+                      fireNumber={t.fireNumber}
+                      kind={t.status}
+                      currentLife={t.life}
+                    />
+                  )}
                   {t.vehicleId && (
                     <Link
                       href={`/frota/${t.vehicleId}`}

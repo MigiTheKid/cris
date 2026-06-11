@@ -898,6 +898,17 @@ export type Database = {
       }
       expiry_status: { Args: { expires: string }; Returns: string }
       is_staff: { Args: never; Returns: boolean }
+      move_tire: {
+        Args: {
+          p_installation_id: string
+          p_km?: number
+          p_target_axle: number
+          p_target_dual?: string
+          p_target_side: string
+          p_target_vehicle: string
+        }
+        Returns: undefined
+      }
       my_current_vehicle: { Args: never; Returns: string }
     }
     Enums: {

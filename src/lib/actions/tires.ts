@@ -220,6 +220,20 @@ export async function removeTire(_prev: TireFormState, formData: FormData): Prom
     .select("fire_number")
     .single();
 
+  // Sucateamento registra o motivo na linha da vida (causa-raiz nas análises).
+  if (destination === "sucateado") {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const reason = String(formData.get("reason") ?? "").trim() || null;
+    await supabase.from("tire_events").insert({
+      tire_id: inst.tire_id,
+      event_type: "sucateamento",
+      notes: reason,
+      created_by: user?.id ?? null,
+    });
+  }
+
   await logAudit({
     action: "remove",
     entity: "tire",
@@ -227,6 +241,85 @@ export async function removeTire(_prev: TireFormState, formData: FormData): Prom
     detail: { fogo: tire?.fire_number, destination },
   });
   revalidateTires(inst.vehicle_id);
+  return { ok: true };
+}
+
+/** Rodízio: move o pneu para outra posição (troca, se ocupada). Atômico via RPC. */
+export async function moveTire(_prev: TireFormState, formData: FormData): Promise<TireFormState> {
+  const installationId = String(formData.get("installationId") ?? "").trim();
+  const targetVehicleId = String(formData.get("targetVehicleId") ?? "").trim();
+  const targetAxle = Number(formData.get("targetAxle"));
+  const targetSide = String(formData.get("targetSide") ?? "");
+  const dualRaw = String(formData.get("targetDual") ?? "");
+  const targetDual = dualRaw === "I" || dualRaw === "E" ? dualRaw : null;
+  const vehicleKm = num(formData.get("vehicleKm"));
+
+  if (!installationId) return { error: "Selecione o pneu de origem." };
+  if (!targetVehicleId || !Number.isInteger(targetAxle) || !["E", "D"].includes(targetSide))
+    return { error: "Selecione a posição de destino." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("move_tire", {
+    p_installation_id: installationId,
+    p_target_vehicle: targetVehicleId,
+    p_target_axle: targetAxle,
+    p_target_side: targetSide,
+    ...(targetDual ? { p_target_dual: targetDual } : {}),
+    ...(vehicleKm != null ? { p_km: Math.round(vehicleKm) } : {}),
+  });
+  if (error) return { error: `Não foi possível mover: ${error.message}` };
+
+  await logAudit({
+    action: "update",
+    entity: "tire",
+    entityId: installationId,
+    detail: { rodizio: true, position: `${targetAxle}${targetSide}${targetDual ?? ""}` },
+  });
+  revalidateTires(targetVehicleId);
+  return { ok: true };
+}
+
+/** Volta do conserto: registra o evento (custo/oficina) e devolve ao estoque. */
+export async function repairReturn(
+  _prev: TireFormState,
+  formData: FormData,
+): Promise<TireFormState> {
+  const tireId = String(formData.get("tireId") ?? "").trim();
+  const cost = num(formData.get("cost"));
+  const vendor = String(formData.get("vendor") ?? "").trim() || null;
+  const notes = String(formData.get("notes") ?? "").trim() || null;
+  if (!tireId) return { error: "Pneu inválido." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada. Entre novamente." };
+
+  const { data: tire, error } = await supabase
+    .from("tires")
+    .update({ status: "estoque" })
+    .eq("id", tireId)
+    .select("fire_number")
+    .single();
+  if (error || !tire) return { error: "Pneu não encontrado." };
+
+  await supabase.from("tire_events").insert({
+    tire_id: tireId,
+    event_type: "conserto",
+    cost,
+    vendor,
+    notes,
+    created_by: user.id,
+  });
+
+  await logAudit({
+    action: "update",
+    entity: "tire",
+    entityId: tire.fire_number,
+    detail: { fogo: tire.fire_number, conserto: true },
+  });
+  revalidateTires();
   return { ok: true };
 }
 

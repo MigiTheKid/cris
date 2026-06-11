@@ -1,13 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Ruler, ArrowUpFromLine, Settings2, Disc } from "lucide-react";
+import Link from "next/link";
+import { Ruler, ArrowUpFromLine, Settings2, Disc, Repeat, History } from "lucide-react";
 import { TireDiagram, type DiagramSelection, type DiagramUnit } from "./TireDiagram";
 import {
   AxleLayoutDialog,
   InstallTireDialog,
   RemoveTireDialog,
   ReadingDialog,
+  RodizioDialog,
 } from "./TireActionDialogs";
 import { StatusBadge } from "./StatusBadge";
 import type { VehicleRodado, RodadoPosition, StockTire } from "@/lib/data/tires";
@@ -41,6 +43,7 @@ export function VehicleTiresTab({
   const [installOpen, setInstallOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const [readingOpen, setReadingOpen] = useState(false);
+  const [rodizioOpen, setRodizioOpen] = useState(false);
 
   const units = useMemo<DiagramUnit[]>(
     () =>
@@ -186,9 +189,19 @@ export function VehicleTiresTab({
                   <button className="cbtn primary" onClick={() => setReadingOpen(true)}>
                     <Ruler size={15} /> Aferir
                   </button>
+                  <button className="cbtn ghost" onClick={() => setRodizioOpen(true)}>
+                    <Repeat size={15} /> Rodízio
+                  </button>
                   <button className="cbtn ghost" onClick={() => setRemoveOpen(true)}>
                     <ArrowUpFromLine size={15} /> Remover
                   </button>
+                  <Link
+                    href={`/pneus/${selected.pos.tire.tireId}`}
+                    className="cbtn ghost"
+                    title="Linha da vida do pneu"
+                  >
+                    <History size={15} /> Histórico
+                  </Link>
                 </div>
               </>
             ) : (
@@ -268,6 +281,15 @@ export function VehicleTiresTab({
             tireId={selected.pos.tire.tireId}
             fireNumber={selected.pos.tire.fireNumber}
             thresholds={thresholds}
+          />
+          <RodizioDialog
+            open={rodizioOpen}
+            onOpenChange={setRodizioOpen}
+            installationId={selected.pos.tire.installationId}
+            fireNumber={selected.pos.tire.fireNumber}
+            currentCode={selected.pos.code}
+            currentUnitIndex={selection?.unitIndex ?? 0}
+            rodados={rodados}
           />
         </>
       )}
