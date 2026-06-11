@@ -8,6 +8,7 @@ import {
   type AxleKind,
   type TireStatus,
 } from "@/lib/tires";
+import { getTireThresholds } from "@/lib/data/settings";
 import type { StatusTone } from "@/lib/status";
 
 export type TireListItem = {
@@ -42,6 +43,7 @@ function latestByTire(readings: ReadingRow[]): Map<string, ReadingRow> {
 /** Todos os pneus (página /pneus). Cliente de sessão (staff via RLS). */
 export async function getTireList(): Promise<TireListItem[]> {
   const db = await createClient();
+  const thresholds = await getTireThresholds();
   const { data: tires, error } = await db
     .from("tires")
     .select(
@@ -77,7 +79,7 @@ export async function getTireList(): Promise<TireListItem[]> {
         status: t.status,
         statusLabel: TIRE_STATUS_LABEL[t.status],
         treadMm: reading ? Number(reading.tread_mm) : null,
-        treadTone: treadTone(reading ? Number(reading.tread_mm) : null).tone,
+        treadTone: treadTone(reading ? Number(reading.tread_mm) : null, thresholds).tone,
         measuredAt: reading?.measured_at ?? null,
         vehiclePlate: active?.vehicle?.plate ?? null,
         vehicleId: active?.vehicle_id ?? null,
@@ -134,6 +136,7 @@ export type VehicleRodado = {
 /** Rodado completo de um veículo: eixos + pneus instalados + última aferição. */
 export async function getVehicleRodado(vehicleId: string): Promise<VehicleRodado | null> {
   const db = await createClient();
+  const thresholds = await getTireThresholds();
 
   const { data: v } = await db
     .from("vehicles")
@@ -183,7 +186,7 @@ export async function getVehicleRodado(vehicleId: string): Promise<VehicleRodado
       if (inst?.tire) {
         const reading = latest.get(inst.tire.id) ?? null;
         const tread = reading ? Number(reading.tread_mm) : null;
-        const tt = treadTone(tread);
+        const tt = treadTone(tread, thresholds);
         tire = {
           tireId: inst.tire.id,
           installationId: inst.id,

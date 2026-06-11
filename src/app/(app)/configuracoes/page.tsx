@@ -1,16 +1,18 @@
-import { Plus, Pencil, FileText, Users, Building2, History, ArrowRight } from "lucide-react";
+import { Plus, Pencil, FileText, Users, Building2, History, ArrowRight, Disc } from "lucide-react";
 import Link from "next/link";
 import { getDocumentTypes } from "@/lib/data/document-types";
 import { toggleDocumentType } from "@/lib/actions/document-types";
 import { getUserList } from "@/lib/data/users";
 import { getCompanies } from "@/lib/data/companies";
 import { getAuditLog } from "@/lib/data/audit";
+import { getTireThresholds } from "@/lib/data/settings";
 import { getCurrentProfile } from "@/lib/auth";
 import { DocTypeDialog } from "@/components/cris/DocTypeDialog";
 import { UserDialog } from "@/components/cris/UserDialog";
 import { CompanyDialog } from "@/components/cris/CompanyDialog";
 import { ResetPasswordButton } from "@/components/cris/ResetPasswordButton";
 import { AuditTimeline } from "@/components/cris/AuditTimeline";
+import { TireThresholdsForm } from "@/components/cris/TireThresholdsForm";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +33,7 @@ export default async function ConfiguracoesPage() {
   const isAdmin = profile?.role === "admin";
 
   const types = await getDocumentTypes();
+  const thresholds = await getTireThresholds();
   const [users, companies, audit] = isAdmin
     ? await Promise.all([getUserList(), getCompanies(), getAuditLog(8)])
     : [[], [], []];
@@ -233,6 +236,28 @@ export default async function ConfiguracoesPage() {
           Desativar um tipo o remove dos formulários, mas preserva os documentos já lançados.
         </p>
       </section>
+
+      {/* ---------- Pneus: limiares de sulco (admin) ---------- */}
+      {isAdmin && (
+        <section className="mb-10">
+          <div className="cmd-section-head">
+            <span className="cmd-section-ico">
+              <Disc size={20} />
+            </span>
+            <h2 className="cmd-section-title" style={{ fontSize: 22 }}>
+              Pneus — limiares de sulco
+            </h2>
+            <span className="cmd-section-rule" />
+          </div>
+          <div className="glass max-w-xl rounded-2xl p-6">
+            <TireThresholdsForm initial={thresholds} />
+          </div>
+          <p className="mt-3 text-xs text-[var(--text-3)]">
+            Define quando o pneu acende verde, âmbar (janela de recapagem) e vermelho no desenho do
+            rodado e na página Pneus. O mínimo legal (CONTRAN) é 1,6 mm.
+          </p>
+        </section>
+      )}
 
       {/* ---------- Empresas (admin) ---------- */}
       {isAdmin && (

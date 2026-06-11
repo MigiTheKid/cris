@@ -14,7 +14,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { saveAxleLayout, installTire, removeTire, recordReading } from "@/lib/actions/tires";
-import { AXLE_PRESETS, AXLE_KIND_LABEL, type AxleKind } from "@/lib/tires";
+import {
+  AXLE_PRESETS,
+  AXLE_KIND_LABEL,
+  DEFAULT_TIRE_THRESHOLDS,
+  type AxleKind,
+  type TireThresholds,
+} from "@/lib/tires";
 import type { StockTire } from "@/lib/data/tires";
 
 const field = "flex flex-col gap-1.5";
@@ -355,21 +361,27 @@ export function ReadingDialog({
   onOpenChange,
   tireId,
   fireNumber,
+  thresholds,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   tireId: string;
   fireNumber: string;
+  thresholds?: TireThresholds;
 }) {
   const [state, formAction, pending] = useActionState(recordReading, {});
   useCloseOnOk(state.ok, onOpenChange);
+  const t = thresholds ?? DEFAULT_TIRE_THRESHOLDS;
+  const fmt = (n: number) => String(n).replace(".", ",");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Aferir pneu {fireNumber}</DialogTitle>
-          <DialogDescription>Sulco em milímetros (legal: 1,6 · recape: 3–5).</DialogDescription>
+          <DialogDescription>
+            Sulco em milímetros (legal: 1,6 · recape: {fmt(t.recapMm)}–{fmt(t.okMm)}).
+          </DialogDescription>
         </DialogHeader>
 
         <form action={formAction} className="space-y-4">

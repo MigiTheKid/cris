@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus, Disc, ChevronRight } from "lucide-react";
 import { getTireList } from "@/lib/data/tires";
+import { getTireThresholds } from "@/lib/data/settings";
 import { TIRE_STATUS_LABEL } from "@/lib/tires";
 import { StatusBadge } from "@/components/cris/StatusBadge";
 import { TireDialog } from "@/components/cris/TireDialog";
@@ -17,7 +18,7 @@ const STATUS_DOT: Record<string, string> = {
 };
 
 export default async function PneusPage() {
-  const tires = await getTireList();
+  const [tires, thresholds] = await Promise.all([getTireList(), getTireThresholds()]);
 
   const emUso = tires.filter((t) => t.status === "em_uso").length;
   const estoque = tires.filter((t) => t.status === "estoque");
@@ -61,7 +62,7 @@ export default async function PneusPage() {
         </div>
         <div className="glass rounded-2xl p-4">
           <div className="text-[11px] font-bold tracking-[0.1em] text-[var(--text-3)] uppercase">
-            Críticos (&lt; 3 mm)
+            Críticos (&lt; {String(thresholds.recapMm).replace(".", ",")} mm)
           </div>
           <div
             className="mono mt-1 text-2xl font-bold"

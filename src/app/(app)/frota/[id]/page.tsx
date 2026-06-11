@@ -4,19 +4,21 @@ import { getDocumentTypes } from "@/lib/data/document-types";
 import { getDriverList } from "@/lib/data/drivers";
 import { getTrailerOptions } from "@/lib/data/vehicles";
 import { getVehicleRodado, getStockTires, type VehicleRodado } from "@/lib/data/tires";
+import { getTireThresholds } from "@/lib/data/settings";
 import { VehicleDetailView } from "@/components/cris/VehicleDetailView";
 
 export const dynamic = "force-dynamic";
 
 export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [detail, docTypes, drivers, trailers, rodado, stock] = await Promise.all([
+  const [detail, docTypes, drivers, trailers, rodado, stock, thresholds] = await Promise.all([
     getVehicleDetail(id),
     getDocumentTypes("vehicle", true),
     getDriverList(),
     getTrailerOptions(),
     getVehicleRodado(id),
     getStockTires(),
+    getTireThresholds(),
   ]);
   if (!detail) notFound();
 
@@ -35,6 +37,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
       trailers={trailers}
       rodados={rodados}
       stock={stock}
+      thresholds={thresholds}
     />
   );
 }

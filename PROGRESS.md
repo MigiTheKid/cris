@@ -12,6 +12,23 @@ Estado do projeto para retomar a qualquer momento.
   - Admin: CPF `000.000.000-00` / senha `mudar123` (Gabriel Krull) → /painel
   - Motorista: CPF `000.000.001-01` / senha `mudar123` (Daurio) → /motorista
 
+## ✅ Pneus: limiares de sulco configuráveis (11/06)
+
+- Migration `20260611130000_app_settings.sql`: tabela `app_settings` (chave/valor
+  jsonb) com seed `tire_thresholds {ok_mm:5, recap_mm:3}`. RLS: leitura autenticada,
+  escrita só admin (`current_role_name()='admin'`).
+- `treadTone(mm, thresholds)` parametrizado; `getTireThresholds()` (fallback no
+  padrão); `saveTireThresholds` (admin gate, valida ≥1,6 legal e verde>retirada,
+  auditado como entity `settings`).
+- Configurações → seção **"Pneus — limiares de sulco"** (admin):
+  `TireThresholdsForm` com **prévia ao vivo** da régua de cores ao digitar.
+- Tudo dinâmico: diagrama do rodado, legenda da aba Pneus, dica do dialog de
+  aferição e KPI "Críticos" da página /pneus leem do parâmetro.
+- **Verificado no browser**: prévia ao vivo OK; validação legal bloqueou 1 mm;
+  salvei 6/4 → pneu 151 (3,2 mm, do Miguel) virou VERMELHO "Retirar" e legenda
+  mostrou ≥6/4–6/<4; banco e auditoria confirmados. Revertido pro padrão 5/3
+  (Miguel define o valor real pela UI); pneus 150/151 do Miguel preservados.
+
 ## ✅ M2 PNEUS — Fase 1 (11/06) — O DIFERENCIAL
 
 Conceito aprovado pelo Miguel (pedido do Fermino): pesquisa de mercado (Prolog,

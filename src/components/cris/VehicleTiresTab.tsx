@@ -11,6 +11,7 @@ import {
 } from "./TireActionDialogs";
 import { StatusBadge } from "./StatusBadge";
 import type { VehicleRodado, RodadoPosition, StockTire } from "@/lib/data/tires";
+import type { TireThresholds } from "@/lib/tires";
 
 function fmtDate(d: string | null) {
   if (!d) return "—";
@@ -22,13 +23,19 @@ function fmtMm(v: number | null) {
   return v != null ? `${String(v).replace(".", ",")} mm` : "—";
 }
 
+function fmtTh(v: number) {
+  return String(v).replace(".", ",");
+}
+
 /** Aba Pneus do detalhe do veículo: diagrama do conjunto + painel da posição. */
 export function VehicleTiresTab({
   rodados,
   stock,
+  thresholds,
 }: {
   rodados: VehicleRodado[]; // [veículo] ou [cavalo, reboque engatado]
   stock: StockTire[];
+  thresholds: TireThresholds;
 }) {
   const [selection, setSelection] = useState<DiagramSelection>(null);
   const [installOpen, setInstallOpen] = useState(false);
@@ -201,13 +208,14 @@ export function VehicleTiresTab({
 
         <div className="rodado-legend">
           <div>
-            <span className="dot ok" /> Sulco ≥ 5 mm
+            <span className="dot ok" /> Sulco ≥ {fmtTh(thresholds.okMm)} mm
           </div>
           <div>
-            <span className="dot warn" /> 3–5 mm · janela de recape
+            <span className="dot warn" /> {fmtTh(thresholds.recapMm)}–{fmtTh(thresholds.okMm)} mm ·
+            janela de recape
           </div>
           <div>
-            <span className="dot crit" /> &lt; 3 mm · retirar
+            <span className="dot crit" /> &lt; {fmtTh(thresholds.recapMm)} mm · retirar
           </div>
           <div>
             <span className="dot idle" /> Sem aferição
@@ -259,6 +267,7 @@ export function VehicleTiresTab({
             onOpenChange={setReadingOpen}
             tireId={selected.pos.tire.tireId}
             fireNumber={selected.pos.tire.fireNumber}
+            thresholds={thresholds}
           />
         </>
       )}

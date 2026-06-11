@@ -33,6 +33,7 @@ import { DeleteDocButton } from "./DeleteDocButton";
 import { PhotoUpload } from "./PhotoUpload";
 import { VehicleTiresTab } from "./VehicleTiresTab";
 import type { VehicleRodado, StockTire } from "@/lib/data/tires";
+import type { TireThresholds } from "@/lib/tires";
 import { saveVehicleDocument } from "@/lib/actions/documents";
 import type { StatusTone } from "@/lib/status";
 import type { VehicleDetail, VehicleDoc } from "@/lib/data/vehicle-detail";
@@ -77,6 +78,7 @@ export function VehicleDetailView({
   trailers,
   rodados,
   stock,
+  thresholds,
 }: {
   detail: VehicleDetail;
   docTypes: DocTypeOption[];
@@ -84,6 +86,7 @@ export function VehicleDetailView({
   trailers: TrailerOption[];
   rodados: VehicleRodado[];
   stock: StockTire[];
+  thresholds: TireThresholds;
 }) {
   const [tab, setTab] = useState<string>("docs");
   const critDocs = detail.docs.filter((d) => d.tone === "crit").length;
@@ -404,7 +407,9 @@ export function VehicleDetailView({
           </div>
         )}
 
-        {tab === "tires" && <VehicleTiresTab rodados={rodados} stock={stock} />}
+        {tab === "tires" && (
+          <VehicleTiresTab rodados={rodados} stock={stock} thresholds={thresholds} />
+        )}
 
         {SOON_TABS.some((t) => t.id === tab) &&
           (() => {

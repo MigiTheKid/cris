@@ -38,6 +38,7 @@ const ENTITY: Record<string, string> = {
   assignment: "motorista do veículo",
   coupling: "reboque do cavalo",
   tire: "pneu",
+  settings: "parâmetros de pneus",
   document_type: "tipo de documento",
   user: "usuário",
   company: "empresa",
@@ -63,6 +64,8 @@ function tail(entry: AuditEntry): string {
   if (typeof d.fogo === "string") parts.push(`fogo ${d.fogo}`);
   if (typeof d.position === "string") parts.push(`(${d.position})`);
   if (typeof d.destination === "string") parts.push(`→ ${d.destination}`);
+  if (typeof d.okMm === "number" && typeof d.recapMm === "number")
+    parts.push(`verde ≥ ${d.okMm} mm · retirar < ${d.recapMm} mm`);
   if (entry.action === "toggle" && typeof d.isActive === "boolean")
     parts.push(d.isActive ? "(ativado)" : "(desativado)");
   if (entry.action === "update" && entry.entity === "user" && typeof d.isActive === "boolean")

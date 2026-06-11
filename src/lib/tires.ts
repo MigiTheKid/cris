@@ -22,15 +22,20 @@ export const TIRE_STATUS_LABEL: Record<TireStatus, string> = {
   vendido: "Vendido",
 };
 
-/** Limiares de sulco (mm): retirada legal é 1,6 — operamos com folga de segurança. */
-export const TREAD_OK_MM = 5;
-export const TREAD_RECAP_MM = 3;
+/** Limiares de sulco (mm). Personalizáveis em Configurações (app_settings). */
+export type TireThresholds = { okMm: number; recapMm: number };
 
-/** Saúde do pneu pelo sulco: verde ≥5, âmbar 3–5 (janela de recape), vermelho <3. */
-export function treadTone(treadMm: number | null): { tone: StatusTone; label: string } {
+/** Padrão de fábrica: retirada legal é 1,6 — operamos com folga de segurança. */
+export const DEFAULT_TIRE_THRESHOLDS: TireThresholds = { okMm: 5, recapMm: 3 };
+
+/** Saúde do pneu pelo sulco: verde ≥ ok, âmbar recap–ok (janela), vermelho < recap. */
+export function treadTone(
+  treadMm: number | null,
+  t: TireThresholds = DEFAULT_TIRE_THRESHOLDS,
+): { tone: StatusTone; label: string } {
   if (treadMm == null) return { tone: "idle", label: "Sem aferição" };
-  if (treadMm < TREAD_RECAP_MM) return { tone: "crit", label: "Retirar" };
-  if (treadMm < TREAD_OK_MM) return { tone: "warn", label: "Janela de recape" };
+  if (treadMm < t.recapMm) return { tone: "crit", label: "Retirar" };
+  if (treadMm < t.okMm) return { tone: "warn", label: "Janela de recape" };
   return { tone: "ok", label: "Em dia" };
 }
 
