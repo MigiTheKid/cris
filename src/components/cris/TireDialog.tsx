@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { saveTire } from "@/lib/actions/tires";
+import { DEFAULT_TIRE_CATALOG, type TireCatalog } from "@/lib/tires";
 
 export type TireInitial = {
   id: string;
@@ -26,19 +27,59 @@ export type TireInitial = {
   notes?: string | null;
 };
 
-const SIZES = ["275/80 R22.5", "295/80 R22.5", "275/70 R22.5", "215/75 R17.5"];
-
 const field = "flex flex-col gap-1.5";
 const labelCls = "text-xs font-bold text-[var(--text-2)]";
 const inputCls =
   "h-11 rounded-xl border border-[var(--border)] bg-[var(--panel-solid)] px-3 text-sm text-[var(--text)] outline-none focus:border-[var(--brand-amber)] focus:ring-4 focus:ring-[color-mix(in_oklab,var(--brand-amber)_18%,transparent)]";
 
+const ci = (s: string) => s.trim().toLocaleLowerCase("pt-BR");
+
 /** Dialog para cadastrar ou editar um pneu (entra no estoque). */
-export function TireDialog({ trigger, initial }: { trigger: ReactElement; initial?: TireInitial }) {
+export function TireDialog({
+  trigger,
+  initial,
+  catalog = DEFAULT_TIRE_CATALOG,
+}: {
+  trigger: ReactElement;
+  initial?: TireInitial;
+  catalog?: TireCatalog;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(saveTire, {});
   const isEdit = !!initial?.id;
+
+  // Seleções controladas — o modelo é filtrado pela marca.
+  const [brand, setBrand] = useState(initial?.brand ?? "");
+  const [model, setModel] = useState(initial?.model ?? "");
+  const [size, setSize] = useState(initial?.size ?? "");
+
+  // Listas de opções: catálogo + o valor atual do pneu (caso tenha saído do catálogo).
+  // Cálculo direto — o React Compiler memoiza sozinho.
+  const brandOptions = [...catalog.brands];
+  if (initial?.brand && !brandOptions.some((b) => ci(b) === ci(initial.brand!)))
+    brandOptions.push(initial.brand);
+
+  const sizeOptions = [...catalog.sizes];
+  if (initial?.size && !sizeOptions.some((s) => ci(s) === ci(initial.size)))
+    sizeOptions.push(initial.size);
+
+  const modelOptions = catalog.models.filter((m) => ci(m.brand) === ci(brand)).map((m) => m.name);
+  if (
+    initial?.model &&
+    ci(initial.brand ?? "") === ci(brand) &&
+    !modelOptions.some((m) => ci(m) === ci(initial.model!))
+  )
+    modelOptions.push(initial.model);
+
+  useEffect(() => {
+    if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setBrand(initial?.brand ?? "");
+      setModel(initial?.model ?? "");
+      setSize(initial?.size ?? "");
+    }
+  }, [open, initial]);
 
   useEffect(() => {
     if (state.ok) {
@@ -47,6 +88,14 @@ export function TireDialog({ trigger, initial }: { trigger: ReactElement; initia
       router.refresh();
     }
   }, [state.ok, router]);
+
+  // Trocou a marca → zera modelo que não pertence mais a ela.
+  function onBrandChange(v: string) {
+    setBrand(v);
+    if (model && !catalog.models.some((m) => ci(m.brand) === ci(v) && ci(m.name) === ci(model))) {
+      setModel("");
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -64,39 +113,18 @@ export function TireDialog({ trigger, initial }: { trigger: ReactElement; initia
         <form action={formAction} className="space-y-4">
           {initial?.id && <input type="hidden" name="id" value={initial.id} />}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className={field}>
-              <label htmlFor="t-fogo" className={labelCls}>
-                Nº de fogo
-              </label>
-              <input
-                id="t-fogo"
-                name="fireNumber"
-                defaultValue={initial?.fireNumber ?? ""}
-                className={inputCls + " mono"}
-                placeholder="ex.: 175"
-                required
-              />
-            </div>
-            <div className={field}>
-              <label htmlFor="t-size" className={labelCls}>
-                Medida
-              </label>
-              <input
-                id="t-size"
-                name="size"
-                defaultValue={initial?.size ?? ""}
-                className={inputCls + " mono"}
-                placeholder="295/80 R22.5"
-                list="tire-sizes"
-                required
-              />
-              <datalist id="tire-sizes">
-                {SIZES.map((s) => (
-                  <option key={s} value={s} />
-                ))}
-              </datalist>
-            </div>
+          <div className={field}>
+            <label htmlFor="t-fogo" className={labelCls}>
+              Nº de fogo
+            </label>
+            <input
+              id="t-fogo"
+              name="fireNumber"
+              defaultValue={initial?.fireNumber ?? ""}
+              className={inputCls + " mono"}
+              placeholder="ex.: 175"
+              required
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -104,26 +132,62 @@ export function TireDialog({ trigger, initial }: { trigger: ReactElement; initia
               <label htmlFor="t-brand" className={labelCls}>
                 Marca
               </label>
-              <input
+              <select
                 id="t-brand"
                 name="brand"
-                defaultValue={initial?.brand ?? ""}
+                value={brand}
+                onChange={(e) => onBrandChange(e.target.value)}
                 className={inputCls}
-                placeholder="ex.: Michelin"
-              />
+              >
+                <option value="">— selecione —</option>
+                {brandOptions.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className={field}>
               <label htmlFor="t-model" className={labelCls}>
                 Modelo
               </label>
-              <input
+              <select
                 id="t-model"
                 name="model"
-                defaultValue={initial?.model ?? ""}
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
                 className={inputCls}
-                placeholder="ex.: X Multi Z"
-              />
+                disabled={!brand || modelOptions.length === 0}
+              >
+                <option value="">{!brand ? "escolha a marca" : "— opcional —"}</option>
+                {modelOptions.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
             </div>
+          </div>
+
+          <div className={field}>
+            <label htmlFor="t-size" className={labelCls}>
+              Medida
+            </label>
+            <select
+              id="t-size"
+              name="size"
+              value={size}
+              onChange={(e) => setSize(e.target.value)}
+              className={inputCls + " mono"}
+              required
+            >
+              <option value="">— selecione —</option>
+              {sizeOptions.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-3 gap-3">

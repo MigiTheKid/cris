@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Plus, Disc, ChevronRight, TrendingDown } from "lucide-react";
+import { Plus, Disc, ChevronRight, TrendingDown, ListChecks } from "lucide-react";
 import { getTireList } from "@/lib/data/tires";
-import { getTireThresholds } from "@/lib/data/settings";
+import { getTireThresholds, getTireCatalog } from "@/lib/data/settings";
 import { TIRE_STATUS_LABEL } from "@/lib/tires";
 import { StatusBadge } from "@/components/cris/StatusBadge";
 import { TireDialog } from "@/components/cris/TireDialog";
+import { TireCatalogDialog } from "@/components/cris/TireCatalogDialog";
 import { TireReturnDialog } from "@/components/cris/TireReturnDialog";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,11 @@ const STATUS_DOT: Record<string, string> = {
 };
 
 export default async function PneusPage() {
-  const [tires, thresholds] = await Promise.all([getTireList(), getTireThresholds()]);
+  const [tires, thresholds, catalog] = await Promise.all([
+    getTireList(),
+    getTireThresholds(),
+    getTireCatalog(),
+  ]);
 
   const emUso = tires.filter((t) => t.status === "em_uso").length;
   const estoque = tires.filter((t) => t.status === "estoque");
@@ -46,7 +51,16 @@ export default async function PneusPage() {
           <Link href="/pneus/analise" className="cbtn ghost">
             <TrendingDown size={16} /> Análise
           </Link>
+          <TireCatalogDialog
+            catalog={catalog}
+            trigger={
+              <button className="cbtn ghost">
+                <ListChecks size={16} /> Catálogo
+              </button>
+            }
+          />
           <TireDialog
+            catalog={catalog}
             trigger={
               <button className="cbtn primary">
                 <Plus size={16} strokeWidth={2.2} /> Novo pneu

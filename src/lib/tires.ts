@@ -34,6 +34,21 @@ export type TireThresholds = { okMm: number; recapMm: number };
 /** Padrão de fábrica: retirada legal é 1,6 — operamos com folga de segurança. */
 export const DEFAULT_TIRE_THRESHOLDS: TireThresholds = { okMm: 5, recapMm: 3 };
 
+/**
+ * Catálogo controlado de pneus — marca/modelo/medida vêm daqui para evitar
+ * divergência de cadastro ("Michelin" vs "michelin"). Cada modelo pertence a
+ * uma marca. Gerenciável em Pneus → Catálogo (app_settings).
+ */
+export type TireModel = { brand: string; name: string };
+export type TireCatalog = { brands: string[]; sizes: string[]; models: TireModel[] };
+
+/** Sementes de mercado, para o sistema já nascer com listas úteis. */
+export const DEFAULT_TIRE_CATALOG: TireCatalog = {
+  brands: ["Michelin", "Pirelli", "Bridgestone", "Goodyear", "Continental", "Firestone"],
+  sizes: ["275/80 R22.5", "295/80 R22.5", "275/70 R22.5", "215/75 R17.5"],
+  models: [],
+};
+
 /** Saúde do pneu pelo sulco: verde ≥ ok, âmbar recap–ok (janela), vermelho < recap. */
 export function treadTone(
   treadMm: number | null,
