@@ -78,7 +78,7 @@ export async function createUser(_prev: UserFormState, formData: FormData): Prom
   return { ok: true };
 }
 
-/** Edita um usuário (nome, cargo, telefone, ativo). Não altera CPF/login. */
+/** Edita um usuário (nome, CPF/login, cargo, telefone, ativo). */
 export async function updateUser(_prev: UserFormState, formData: FormData): Promise<UserFormState> {
   const gate = await requireAdmin();
   if (gate.error) return { error: gate.error };
