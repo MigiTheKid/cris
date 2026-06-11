@@ -82,6 +82,7 @@ export function VehicleDetailView({
   rodados,
   stock,
   thresholds,
+  canDelete = false,
 }: {
   detail: VehicleDetail;
   docTypes: DocTypeOption[];
@@ -90,6 +91,7 @@ export function VehicleDetailView({
   rodados: VehicleRodado[];
   stock: StockTire[];
   thresholds: TireThresholds;
+  canDelete?: boolean;
 }) {
   const [tab, setTab] = useState<string>("docs");
   const critDocs = detail.docs.filter((d) => d.tone === "crit").length;
@@ -193,23 +195,25 @@ export function VehicleDetailView({
                 </button>
               }
             />
-            <DangerDeleteDialog
-              trigger={
-                <button className="cbtn ghost" style={{ color: "var(--crit)" }}>
-                  <Trash2 size={16} /> Excluir
-                </button>
-              }
-              title="Excluir veículo"
-              description={`Excluir o veículo ${detail.plate} da frota? Ele sai das listas e dos alertas; o histórico (auditoria, atribuições, pneus) é preservado e pode ser restaurado.`}
-              confirmWord={detail.plate}
-              consequences={[
-                "Some da Frota, do Painel e dos alertas documentais",
-                "Libera o motorista atribuído e desfaz engates ativos",
-                "Reversível: a exclusão é um arquivamento (não apaga o histórico)",
-              ]}
-              action={() => deleteVehicle(detail.id)}
-              redirectTo="/frota"
-            />
+            {canDelete && (
+              <DangerDeleteDialog
+                trigger={
+                  <button className="cbtn ghost" style={{ color: "var(--crit)" }}>
+                    <Trash2 size={16} /> Excluir
+                  </button>
+                }
+                title="Excluir veículo"
+                description={`Excluir o veículo ${detail.plate} da frota? Ele sai das listas e dos alertas; o histórico (auditoria, atribuições, pneus) é preservado e pode ser restaurado.`}
+                confirmWord={detail.plate}
+                consequences={[
+                  "Some da Frota, do Painel e dos alertas documentais",
+                  "Libera o motorista atribuído e desfaz engates ativos",
+                  "Reversível: a exclusão é um arquivamento (não apaga o histórico)",
+                ]}
+                action={() => deleteVehicle(detail.id)}
+                redirectTo="/frota"
+              />
+            )}
           </div>
         </div>
       </div>

@@ -5,21 +5,24 @@ import { getDriverList } from "@/lib/data/drivers";
 import { getTrailerOptions } from "@/lib/data/vehicles";
 import { getVehicleRodado, getStockTires, type VehicleRodado } from "@/lib/data/tires";
 import { getTireThresholds } from "@/lib/data/settings";
+import { getCurrentProfile } from "@/lib/auth";
 import { VehicleDetailView } from "@/components/cris/VehicleDetailView";
 
 export const dynamic = "force-dynamic";
 
 export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [detail, docTypes, drivers, trailers, rodado, stock, thresholds] = await Promise.all([
-    getVehicleDetail(id),
-    getDocumentTypes("vehicle", true),
-    getDriverList(),
-    getTrailerOptions(),
-    getVehicleRodado(id),
-    getStockTires(),
-    getTireThresholds(),
-  ]);
+  const [detail, docTypes, drivers, trailers, rodado, stock, thresholds, profile] =
+    await Promise.all([
+      getVehicleDetail(id),
+      getDocumentTypes("vehicle", true),
+      getDriverList(),
+      getTrailerOptions(),
+      getVehicleRodado(id),
+      getStockTires(),
+      getTireThresholds(),
+      getCurrentProfile(),
+    ]);
   if (!detail) notFound();
 
   // Conjunto: cavalo mostra o rodado do reboque engatado junto (e vice-versa não — reboque mostra só o seu).
@@ -38,6 +41,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
       rodados={rodados}
       stock={stock}
       thresholds={thresholds}
+      canDelete={profile?.role === "admin"}
     />
   );
 }

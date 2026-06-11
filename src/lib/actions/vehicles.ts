@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentProfile } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import type { Database } from "@/lib/database.types";
 
@@ -109,11 +110,12 @@ function friendly(msg: string): string {
 export async function deleteVehicle(id: string): Promise<VehicleFormState> {
   if (!id) return { error: "Veículo inválido." };
 
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role !== "admin") {
+    return { error: "Apenas administradores podem excluir veículos." };
+  }
+
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Sessão expirada. Entre novamente." };
 
   // Pneus instalados precisam de destino (estoque/recapadora/sucata) antes.
   const { data: tires } = await supabase
