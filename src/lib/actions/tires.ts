@@ -75,6 +75,46 @@ export async function saveTire(_prev: TireFormState, formData: FormData): Promis
   return { ok: true };
 }
 
+/**
+ * Exclui PERMANENTEMENTE um pneu do cadastro. Só conclui se o pneu não tiver
+ * histórico — instalações/aferições/eventos usam ON DELETE RESTRICT, então o
+ * banco bloqueia e preservamos o histórico. Serve para apagar cadastros errados.
+ */
+export async function deleteTire(tireId: string): Promise<TireFormState> {
+  if (!tireId) return { error: "Pneu inválido." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada. Entre novamente." };
+
+  const { data: tire } = await supabase
+    .from("tires")
+    .select("fire_number")
+    .eq("id", tireId)
+    .maybeSingle();
+
+  const { error } = await supabase.from("tires").delete().eq("id", tireId);
+  if (error) {
+    console.error("deleteTire:", error.message);
+    return {
+      error:
+        "Não foi possível excluir — este pneu já tem histórico (instalação, aferição ou eventos). " +
+        "A exclusão serve para cadastros feitos por engano; os com histórico ficam preservados.",
+    };
+  }
+
+  await logAudit({
+    action: "delete",
+    entity: "tire",
+    entityId: tire?.fire_number ?? tireId,
+    detail: { fogo: tire?.fire_number },
+  });
+  revalidateTires();
+  return { ok: true };
+}
+
 /** Define o layout de eixos do veículo (substitui o atual). */
 export async function saveAxleLayout(
   _prev: TireFormState,

@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/cris/StatusBadge";
 import { TireDialog } from "@/components/cris/TireDialog";
 import { TireCatalogDialog } from "@/components/cris/TireCatalogDialog";
 import { TireReturnDialog } from "@/components/cris/TireReturnDialog";
+import { DeleteTireButton } from "@/components/cris/DeleteTireButton";
 
 export const dynamic = "force-dynamic";
 
@@ -175,27 +176,30 @@ export default async function PneusPage() {
                     label={t.statusLabel}
                   />
                 </td>
-                <td className="px-5 py-3 text-right">
-                  {(t.status === "recapagem" || t.status === "conserto") && (
-                    <TireReturnDialog
-                      tireId={t.id}
-                      fireNumber={t.fireNumber}
-                      kind={t.status}
-                      currentLife={t.life}
-                    />
-                  )}
-                  {t.vehicleId && (
-                    <Link
-                      href={`/frota/${t.vehicleId}`}
-                      className="inline-flex"
-                      aria-label={`Ver no veículo ${t.vehiclePlate}`}
-                    >
-                      <ChevronRight
-                        size={18}
-                        className="text-[var(--text-3)] transition-colors hover:text-[var(--brand-amber)]"
+                <td className="px-5 py-3">
+                  <div className="flex items-center justify-end gap-1.5">
+                    {(t.status === "recapagem" || t.status === "conserto") && (
+                      <TireReturnDialog
+                        tireId={t.id}
+                        fireNumber={t.fireNumber}
+                        kind={t.status}
+                        currentLife={t.life}
                       />
-                    </Link>
-                  )}
+                    )}
+                    <DeleteTireButton tireId={t.id} fireNumber={t.fireNumber} />
+                    {t.vehicleId && (
+                      <Link
+                        href={`/frota/${t.vehicleId}`}
+                        className="inline-flex"
+                        aria-label={`Ver no veículo ${t.vehiclePlate}`}
+                      >
+                        <ChevronRight
+                          size={18}
+                          className="text-[var(--text-3)] transition-colors hover:text-[var(--brand-amber)]"
+                        />
+                      </Link>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

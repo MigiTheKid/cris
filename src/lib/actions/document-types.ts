@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentProfile } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 
 export type DocTypeFormState = { error?: string; ok?: boolean };
@@ -74,6 +76,34 @@ export async function saveDocumentType(
       return { error: `Não foi possível criar: ${error.message}` };
   }
   return { error: "Já existem muitos tipos com esse nome. Use outro nome." };
+}
+
+/**
+ * Exclui PERMANENTEMENTE um tipo de documento. Staff (admin/gestor). Escreve via
+ * service role porque o catálogo não tem policy de DELETE no RLS. Só conclui se
+ * o tipo não estiver em uso — o FK (RESTRICT) bloqueia; nesse caso, desative.
+ */
+export async function deleteDocumentType(key: string): Promise<DocTypeFormState> {
+  if (!key) return { error: "Tipo inválido." };
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role === "driver") {
+    return { error: "Apenas a equipe interna pode excluir tipos de documento." };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("document_types").delete().eq("key", key);
+  if (error) {
+    console.error("deleteDocumentType:", error.message);
+    return {
+      error:
+        "Não foi possível excluir — este tipo está em uso por documentos já cadastrados. " +
+        "Você pode Desativá-lo, que o esconde dos formulários e preserva o histórico.",
+    };
+  }
+
+  await logAudit({ action: "delete", entity: "document_type", entityId: key });
+  revalidateAll();
+  return { ok: true };
 }
 
 /** Ativa/desativa um tipo (inativo some dos dropdowns; histórico fica). */

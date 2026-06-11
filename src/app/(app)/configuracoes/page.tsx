@@ -12,6 +12,7 @@ import { UserDialog } from "@/components/cris/UserDialog";
 import { CompanyDialog } from "@/components/cris/CompanyDialog";
 import { ResetPasswordButton } from "@/components/cris/ResetPasswordButton";
 import { DeleteUserButton } from "@/components/cris/DeleteUserButton";
+import { DeleteDocTypeButton } from "@/components/cris/DeleteDocTypeButton";
 import { AuditTimeline } from "@/components/cris/AuditTimeline";
 import { TireThresholdsForm } from "@/components/cris/TireThresholdsForm";
 
@@ -216,21 +217,24 @@ export default async function ConfiguracoesPage() {
                       </button>
                     </form>
                   </td>
-                  <td className="px-5 py-3 text-right">
-                    <DocTypeDialog
-                      initial={{
-                        key: t.key,
-                        label: t.label,
-                        description: t.description,
-                        scope: t.scope,
-                        sort: t.sort,
-                      }}
-                      trigger={
-                        <button className="d-mini-btn" title="Editar">
-                          <Pencil size={15} />
-                        </button>
-                      }
-                    />
+                  <td className="px-5 py-3">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <DocTypeDialog
+                        initial={{
+                          key: t.key,
+                          label: t.label,
+                          description: t.description,
+                          scope: t.scope,
+                          sort: t.sort,
+                        }}
+                        trigger={
+                          <button className="d-mini-btn" title="Editar">
+                            <Pencil size={15} />
+                          </button>
+                        }
+                      />
+                      <DeleteDocTypeButton docKey={t.key} label={t.label} />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -238,7 +242,8 @@ export default async function ConfiguracoesPage() {
           </table>
         </div>
         <p className="mt-3 text-xs text-[var(--text-3)]">
-          Desativar um tipo o remove dos formulários, mas preserva os documentos já lançados.
+          Desativar um tipo o remove dos formulários, mas preserva os documentos já lançados. A
+          lixeira 🗑️ apaga de vez (só funciona para tipos que não estão em uso).
         </p>
       </section>
 
