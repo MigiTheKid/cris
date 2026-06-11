@@ -1,4 +1,14 @@
-import { Plus, Pencil, FileText, Users, Building2, History, ArrowRight, Disc } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  FileText,
+  Users,
+  Building2,
+  History,
+  ArrowRight,
+  Disc,
+  Wrench,
+} from "lucide-react";
 import Link from "next/link";
 import { getDocumentTypes } from "@/lib/data/document-types";
 import { toggleDocumentType } from "@/lib/actions/document-types";
@@ -6,13 +16,16 @@ import { getUserList } from "@/lib/data/users";
 import { getCompanies } from "@/lib/data/companies";
 import { getAuditLog } from "@/lib/data/audit";
 import { getTireThresholds } from "@/lib/data/settings";
+import { getVendors, VENDOR_KIND_LABEL } from "@/lib/data/vendors";
 import { getCurrentProfile } from "@/lib/auth";
 import { DocTypeDialog } from "@/components/cris/DocTypeDialog";
 import { UserDialog } from "@/components/cris/UserDialog";
 import { CompanyDialog } from "@/components/cris/CompanyDialog";
+import { VendorDialog } from "@/components/cris/VendorDialog";
 import { ResetPasswordButton } from "@/components/cris/ResetPasswordButton";
 import { DeleteUserButton } from "@/components/cris/DeleteUserButton";
 import { DeleteDocTypeButton } from "@/components/cris/DeleteDocTypeButton";
+import { DeleteVendorButton } from "@/components/cris/DeleteVendorButton";
 import { AuditTimeline } from "@/components/cris/AuditTimeline";
 import { TireThresholdsForm } from "@/components/cris/TireThresholdsForm";
 
@@ -36,6 +49,7 @@ export default async function ConfiguracoesPage() {
 
   const types = await getDocumentTypes();
   const thresholds = await getTireThresholds();
+  const vendors = await getVendors();
   const [users, companies, audit] = isAdmin
     ? await Promise.all([getUserList(), getCompanies(), getAuditLog(8)])
     : [[], [], []];
@@ -244,6 +258,98 @@ export default async function ConfiguracoesPage() {
         <p className="mt-3 text-xs text-[var(--text-3)]">
           Desativar um tipo o remove dos formulários, mas preserva os documentos já lançados. A
           lixeira 🗑️ apaga de vez (só funciona para tipos que não estão em uso).
+        </p>
+      </section>
+
+      {/* ---------- Oficinas ---------- */}
+      <section className="mb-10">
+        <div className="cmd-section-head">
+          <span className="cmd-section-ico">
+            <Wrench size={20} />
+          </span>
+          <h2 className="cmd-section-title" style={{ fontSize: 22 }}>
+            Oficinas
+          </h2>
+          <span className="cmd-section-count">{vendors.length}</span>
+          <span className="cmd-section-rule" />
+          <VendorDialog
+            trigger={
+              <button className="cbtn primary" style={{ height: 40 }}>
+                <Plus size={16} /> Nova oficina
+              </button>
+            }
+          />
+        </div>
+
+        <div className="glass overflow-hidden rounded-3xl">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="text-[var(--text-3)]">
+                {["Nome", "Tipo", "Telefone", "Cidade", "Situação", ""].map((h, i) => (
+                  <th
+                    key={i}
+                    className="border-b border-[var(--border)] px-5 py-3.5 text-[11px] font-bold tracking-[0.12em] uppercase"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {vendors.map((v) => (
+                <tr
+                  key={v.id}
+                  className="border-b border-[var(--border)] last:border-0"
+                  style={{ opacity: v.isActive ? 1 : 0.5 }}
+                >
+                  <td className="px-5 py-3 font-semibold text-[var(--text)]">{v.name}</td>
+                  <td className="px-5 py-3 text-sm text-[var(--text-2)]">
+                    {VENDOR_KIND_LABEL[v.kind]}
+                  </td>
+                  <td className="px-5 py-3 text-sm text-[var(--text-2)]">{v.phone ?? "—"}</td>
+                  <td className="px-5 py-3 text-sm text-[var(--text-2)]">{v.city ?? "—"}</td>
+                  <td className="px-5 py-3">
+                    <span className="status-badge">
+                      <span className={`dot ${v.isActive ? "ok" : "idle"}`} />
+                      {v.isActive ? "Ativa" : "Inativa"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <VendorDialog
+                        initial={{
+                          id: v.id,
+                          name: v.name,
+                          kind: v.kind,
+                          phone: v.phone,
+                          city: v.city,
+                          notes: v.notes,
+                          isActive: v.isActive,
+                        }}
+                        trigger={
+                          <button className="d-mini-btn" title="Editar">
+                            <Pencil size={15} />
+                          </button>
+                        }
+                      />
+                      <DeleteVendorButton vendorId={v.id} name={v.name} />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {vendors.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-5 py-12 text-center text-sm text-[var(--text-3)]">
+                    Nenhuma oficina cadastrada. Comece pelo botão “Nova oficina”.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-xs text-[var(--text-3)]">
+          Oficinas aparecem na seleção ao registrar a troca de óleo. Desativar esconde das listas; a
+          lixeira 🗑️ apaga de vez (só funciona para oficinas sem uso).
         </p>
       </section>
 

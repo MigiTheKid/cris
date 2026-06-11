@@ -38,6 +38,7 @@ import { VehicleTiresTab } from "./VehicleTiresTab";
 import { deleteVehicle } from "@/lib/actions/vehicles";
 import type { VehicleRodado, StockTire } from "@/lib/data/tires";
 import type { VehicleOil } from "@/lib/data/oil-changes";
+import type { Vendor } from "@/lib/data/vendors";
 import type { TireThresholds } from "@/lib/tires";
 import { saveVehicleDocument } from "@/lib/actions/documents";
 import type { StatusTone } from "@/lib/status";
@@ -84,6 +85,7 @@ export function VehicleDetailView({
   stock,
   thresholds,
   oil,
+  vendors,
   canDelete = false,
 }: {
   detail: VehicleDetail;
@@ -94,6 +96,7 @@ export function VehicleDetailView({
   stock: StockTire[];
   thresholds: TireThresholds;
   oil: VehicleOil;
+  vendors: Vendor[];
   canDelete?: boolean;
 }) {
   const [tab, setTab] = useState<string>("docs");
@@ -551,6 +554,7 @@ export function VehicleDetailView({
               </div>
               <OilChangeDialog
                 vehicleId={detail.id}
+                vendors={vendors}
                 trigger={
                   <button className="cbtn primary" style={{ height: 40 }}>
                     <Plus size={16} /> Registrar troca
@@ -596,18 +600,38 @@ export function VehicleDetailView({
                             ? `${c.changedAt.slice(8, 10)}/${c.changedAt.slice(5, 7)}/${c.changedAt.slice(0, 4)}`
                             : null,
                           c.oilSpec,
-                          c.filterChanged ? "filtro trocado" : null,
-                          c.vendor,
-                          c.cost != null
-                            ? c.cost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                          c.vendorName,
+                          c.total > 0
+                            ? c.total.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              })
                             : null,
                         ]
                           .filter(Boolean)
                           .join(" · ") || "sem detalhes"}
                       </div>
+                      {c.items.some((i) => i.category === "insumo") && (
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {c.items
+                            .filter((i) => i.category === "insumo")
+                            .map((i, idx) => (
+                              <span
+                                key={idx}
+                                className="rounded-md border border-[var(--border)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--text-2)]"
+                              >
+                                {i.label}
+                                {i.quantity != null
+                                  ? ` · ${String(i.quantity).replace(".", ",")}${i.unit ? " " + i.unit : ""}`
+                                  : ""}
+                              </span>
+                            ))}
+                        </div>
+                      )}
                     </div>
                     <OilChangeDialog
                       vehicleId={detail.id}
+                      vendors={vendors}
                       initial={c}
                       trigger={
                         <button className="d-mini-btn" title="Editar">

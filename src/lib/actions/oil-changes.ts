@@ -16,14 +16,43 @@ function int(v: FormDataEntryValue | null): number | null {
   return Number.isInteger(n) ? n : null;
 }
 
-function money(v: FormDataEntryValue | null): number | null {
-  const s = String(v ?? "")
-    .trim()
-    .replace(/\./g, "")
-    .replace(",", ".");
-  if (!s) return null;
-  const n = Number(s);
-  return Number.isFinite(n) ? n : null;
+type RawItem = {
+  category?: string;
+  label?: string;
+  quantity?: unknown;
+  unit?: string;
+  cost?: unknown;
+};
+type ParsedItem = {
+  category: string;
+  label: string;
+  quantity: number | null;
+  unit: string | null;
+  cost: number;
+};
+
+const UNITS = ["un", "L", "kg", "h"];
+
+/** Lê os itens de custo (insumos + mão de obra) do campo JSON; só os com valor > 0. */
+function parseItems(raw: FormDataEntryValue | null): ParsedItem[] {
+  let arr: RawItem[];
+  try {
+    arr = JSON.parse(String(raw ?? "[]"));
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map((i) => {
+      const category = i.category === "mao_de_obra" ? "mao_de_obra" : "insumo";
+      const label = String(i.label ?? "").trim();
+      const cost = Number(i.cost);
+      const qn = Number(i.quantity);
+      const quantity = Number.isFinite(qn) && qn > 0 ? qn : null;
+      const unit = UNITS.includes(String(i.unit)) ? String(i.unit) : null;
+      return { category, label, quantity, unit, cost: Number.isFinite(cost) ? cost : 0 };
+    })
+    .filter((i) => i.label && i.cost > 0);
 }
 
 /** Registra (ou edita) uma troca de óleo de um veículo. */
@@ -38,9 +67,10 @@ export async function saveOilChange(
   const nextKm = int(formData.get("nextKm"));
   const oilSpec = String(formData.get("oilSpec") ?? "").trim() || null;
   const filterChanged = formData.get("filterChanged") === "on";
-  const vendor = String(formData.get("vendor") ?? "").trim() || null;
-  const cost = money(formData.get("cost"));
+  const vendorId = String(formData.get("vendorId") ?? "").trim() || null;
   const notes = String(formData.get("notes") ?? "").trim() || null;
+  const items = parseItems(formData.get("items"));
+  const total = items.reduce((s, i) => s + i.cost, 0);
 
   if (!vehicleId) return { error: "Veículo inválido." };
   if (odometerKm == null || odometerKm < 0) return { error: "Informe o km da troca." };
@@ -60,21 +90,39 @@ export async function saveOilChange(
     next_km: nextKm,
     oil_spec: oilSpec,
     filter_changed: filterChanged,
-    vendor,
-    cost,
+    vendor_id: vendorId,
+    cost: total, // total denormalizado (soma dos itens) para somas rápidas
     notes,
   };
 
-  const { error } = id
-    ? await supabase.from("oil_changes").update(payload).eq("id", id)
-    : await supabase.from("oil_changes").insert({ ...payload, created_by: user.id });
-  if (error) return { error: `Não foi possível salvar: ${error.message}` };
+  let changeId = id;
+  if (id) {
+    const { error } = await supabase.from("oil_changes").update(payload).eq("id", id);
+    if (error) return { error: `Não foi possível salvar: ${error.message}` };
+  } else {
+    const { data: inserted, error } = await supabase
+      .from("oil_changes")
+      .insert({ ...payload, created_by: user.id })
+      .select("id")
+      .single();
+    if (error || !inserted) return { error: `Não foi possível salvar: ${error?.message ?? "?"}` };
+    changeId = inserted.id;
+  }
+
+  // Reescreve os itens de custo desta troca (insumos + mão de obra).
+  await supabase.from("oil_change_items").delete().eq("oil_change_id", changeId);
+  if (items.length > 0) {
+    const { error: itErr } = await supabase
+      .from("oil_change_items")
+      .insert(items.map((i) => ({ oil_change_id: changeId, ...i })));
+    if (itErr) return { error: `Troca salva, mas os custos falharam: ${itErr.message}` };
+  }
 
   await logAudit({
     action: id ? "update" : "create",
     entity: "oil_change",
     entityId: vehicleId,
-    detail: { odometerKm, nextKm },
+    detail: { odometerKm, nextKm, total },
   });
   revalidatePath(`/frota/${vehicleId}`);
   return { ok: true };

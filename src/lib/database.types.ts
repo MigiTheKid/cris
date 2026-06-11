@@ -329,6 +329,44 @@ export type Database = {
           },
         ]
       }
+      oil_change_items: {
+        Row: {
+          category: string
+          cost: number
+          id: string
+          label: string
+          oil_change_id: string
+          quantity: number | null
+          unit: string | null
+        }
+        Insert: {
+          category: string
+          cost?: number
+          id?: string
+          label: string
+          oil_change_id: string
+          quantity?: number | null
+          unit?: string | null
+        }
+        Update: {
+          category?: string
+          cost?: number
+          id?: string
+          label?: string
+          oil_change_id?: string
+          quantity?: number | null
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oil_change_items_oil_change_id_fkey"
+            columns: ["oil_change_id"]
+            isOneToOne: false
+            referencedRelation: "oil_changes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       oil_changes: {
         Row: {
           changed_at: string | null
@@ -343,6 +381,7 @@ export type Database = {
           oil_spec: string | null
           vehicle_id: string
           vendor: string | null
+          vendor_id: string | null
         }
         Insert: {
           changed_at?: string | null
@@ -357,6 +396,7 @@ export type Database = {
           oil_spec?: string | null
           vehicle_id: string
           vendor?: string | null
+          vendor_id?: string | null
         }
         Update: {
           changed_at?: string | null
@@ -371,6 +411,7 @@ export type Database = {
           oil_spec?: string | null
           vehicle_id?: string
           vendor?: string | null
+          vendor_id?: string | null
         }
         Relationships: [
           {
@@ -385,6 +426,13 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oil_changes_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
             referencedColumns: ["id"]
           },
         ]
@@ -932,6 +980,50 @@ export type Database = {
           },
           {
             foreignKeyName: "vehicles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendors: {
+        Row: {
+          city: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          kind: string
+          name: string
+          notes: string | null
+          phone: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendors_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"

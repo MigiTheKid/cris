@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, Truck, Users, Disc, BarChart3, Settings, LogOut } from "lucide-react";
+import { Home, Truck, Users, Disc, Wrench, BarChart3, Settings, LogOut } from "lucide-react";
 import { CrisMark } from "./CrisMark";
 import { Avatar } from "./Avatar";
 import { signOut } from "@/lib/actions/auth";
@@ -13,6 +13,7 @@ const NAV = [
   { href: "/frota", label: "Frota", icon: Truck },
   { href: "/motoristas", label: "Motoristas", icon: Users },
   { href: "/pneus", label: "Pneus", icon: Disc },
+  { href: "/tma", label: "T.M.A.", icon: Wrench },
   { href: "/indicadores", label: "Indicadores", icon: BarChart3 },
 ] as const;
 
