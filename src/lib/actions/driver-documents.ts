@@ -3,30 +3,29 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/audit";
-
-export type DocFormState = { error?: string; ok?: boolean };
+import type { DocFormState } from "./documents";
 
 function cleanDate(v: FormDataEntryValue | null): string | null {
   const s = String(v ?? "").trim();
   return s.length ? s : null;
 }
 
-const MAX_PDF_BYTES = 10 * 1024 * 1024; // 10 MB (mesmo limite do bucket)
+const MAX_PDF_BYTES = 10 * 1024 * 1024;
 
-/** Cria ou atualiza um documento de veículo (com PDF opcional no Storage). */
-export async function saveVehicleDocument(
+/** Cria ou atualiza um documento de motorista (com PDF opcional no Storage). */
+export async function saveDriverDocument(
   _prev: DocFormState,
   formData: FormData,
 ): Promise<DocFormState> {
   const id = String(formData.get("id") ?? "").trim();
-  const vehicleId = String(formData.get("vehicleId") ?? "").trim();
+  const driverId = String(formData.get("driverId") ?? "").trim();
   const docType = String(formData.get("docType") ?? "").trim();
   const docNumber = String(formData.get("docNumber") ?? "").trim() || null;
   const issuedAt = cleanDate(formData.get("issuedAt"));
   const expiresAt = cleanDate(formData.get("expiresAt"));
   const file = formData.get("file");
 
-  if (!vehicleId) return { error: "Veículo inválido." };
+  if (!driverId) return { error: "Motorista inválido." };
   if (!docType) return { error: "Selecione o tipo de documento." };
   if (issuedAt && expiresAt && expiresAt < issuedAt)
     return { error: "A validade não pode ser anterior à emissão." };
@@ -37,12 +36,11 @@ export async function saveVehicleDocument(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada. Entre novamente." };
 
-  // Upload do PDF (opcional). Path: vehicle/{vehicleId}/{docType}-{timestamp}.pdf
   let filePath: string | null = null;
   if (file instanceof File && file.size > 0) {
     if (file.type !== "application/pdf") return { error: "O arquivo precisa ser um PDF." };
     if (file.size > MAX_PDF_BYTES) return { error: "PDF acima de 10 MB. Reduza o arquivo." };
-    filePath = `vehicle/${vehicleId}/${docType}-${Date.now()}.pdf`;
+    filePath = `driver/${driverId}/${docType}-${Date.now()}.pdf`;
     const { error: upErr } = await supabase.storage
       .from("documents")
       .upload(filePath, file, { contentType: "application/pdf" });
@@ -50,26 +48,25 @@ export async function saveVehicleDocument(
   }
 
   const payload: {
-    vehicle_id: string;
+    driver_id: string;
     doc_type: string;
     doc_number: string | null;
     issued_at: string | null;
     expires_at: string | null;
     file_path?: string;
   } = {
-    vehicle_id: vehicleId,
+    driver_id: driverId,
     doc_type: docType,
     doc_number: docNumber,
     issued_at: issuedAt,
     expires_at: expiresAt,
   };
-  if (filePath) payload.file_path = filePath; // só troca o arquivo se um novo subiu
+  if (filePath) payload.file_path = filePath;
 
-  // Arquivo antigo (se vai ser substituído) — apagar do Storage depois do update.
   let oldPath: string | null = null;
   if (id && filePath) {
     const { data: existing } = await supabase
-      .from("vehicle_documents")
+      .from("driver_documents")
       .select("file_path")
       .eq("id", id)
       .maybeSingle();
@@ -77,11 +74,10 @@ export async function saveVehicleDocument(
   }
 
   const { error } = id
-    ? await supabase.from("vehicle_documents").update(payload).eq("id", id)
-    : await supabase.from("vehicle_documents").insert({ ...payload, created_by: user.id });
+    ? await supabase.from("driver_documents").update(payload).eq("id", id)
+    : await supabase.from("driver_documents").insert({ ...payload, created_by: user.id });
 
   if (error) {
-    // Não deixa arquivo órfão se o registro falhou.
     if (filePath) await supabase.storage.from("documents").remove([filePath]);
     return { error: `Não foi possível salvar: ${error.message}` };
   }
@@ -92,27 +88,27 @@ export async function saveVehicleDocument(
 
   await logAudit({
     action: id ? "update" : "create",
-    entity: "vehicle_document",
-    entityId: vehicleId,
+    entity: "driver_document",
+    entityId: driverId,
     detail: { docType },
   });
-  revalidatePath(`/frota/${vehicleId}`);
-  revalidatePath("/frota");
+  revalidatePath(`/motoristas/${driverId}`);
+  revalidatePath("/motoristas");
   revalidatePath("/painel");
   return { ok: true };
 }
 
-/** Remove (soft delete) um documento de veículo. */
-export async function deleteVehicleDocument(id: string, vehicleId: string): Promise<DocFormState> {
+/** Remove (soft delete) um documento de motorista. */
+export async function deleteDriverDocument(id: string, driverId: string): Promise<DocFormState> {
   const supabase = await createClient();
   const { error } = await supabase
-    .from("vehicle_documents")
+    .from("driver_documents")
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", id);
   if (error) return { error: error.message };
-  await logAudit({ action: "delete", entity: "vehicle_document", entityId: vehicleId });
-  revalidatePath(`/frota/${vehicleId}`);
-  revalidatePath("/frota");
+  await logAudit({ action: "delete", entity: "driver_document", entityId: driverId });
+  revalidatePath(`/motoristas/${driverId}`);
+  revalidatePath("/motoristas");
   revalidatePath("/painel");
   return { ok: true };
 }

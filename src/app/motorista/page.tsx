@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function MotoristaPage() {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
+  if (profile.mustChangePassword) redirect("/trocar-senha");
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[var(--bg)] p-6 text-center">

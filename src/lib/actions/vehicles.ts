@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { logAudit } from "@/lib/audit";
 import type { Database } from "@/lib/database.types";
 
 type VehicleType = Database["public"]["Enums"]["vehicle_type"];
@@ -75,6 +76,7 @@ export async function saveVehicle(
   if (id) {
     const { error } = await supabase.from("vehicles").update(payload).eq("id", id);
     if (error) return { error: friendly(error.message) };
+    await logAudit({ action: "update", entity: "vehicle", entityId: id, detail: { plate } });
     revalidatePath(`/frota/${id}`);
     revalidatePath("/frota");
     revalidatePath("/painel");
@@ -88,6 +90,7 @@ export async function saveVehicle(
     .single();
   if (error || !inserted) return { error: friendly(error?.message ?? "erro desconhecido") };
 
+  await logAudit({ action: "create", entity: "vehicle", entityId: inserted.id, detail: { plate } });
   revalidatePath("/frota");
   revalidatePath("/painel");
   return { ok: true, id: inserted.id };

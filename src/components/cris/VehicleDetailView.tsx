@@ -18,11 +18,16 @@ import {
   Wrench,
   Fuel,
   CalendarDays,
+  UserX,
+  UserCog,
 } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { StatusBadge } from "./StatusBadge";
 import { DocumentDialog, type DocTypeOption } from "./DocumentDialog";
 import { VehicleDialog } from "./VehicleDialog";
+import { AssignDriverDialog, type DriverOption } from "./AssignDriverDialog";
+import { DeleteDocButton } from "./DeleteDocButton";
+import { saveVehicleDocument } from "@/lib/actions/documents";
 import type { StatusTone } from "@/lib/status";
 import type { VehicleDetail, VehicleDoc } from "@/lib/data/vehicle-detail";
 
@@ -63,9 +68,11 @@ function daysText(days: number | null) {
 export function VehicleDetailView({
   detail,
   docTypes,
+  drivers,
 }: {
   detail: VehicleDetail;
   docTypes: DocTypeOption[];
+  drivers: DriverOption[];
 }) {
   const [tab, setTab] = useState<string>("docs");
   const critDocs = detail.docs.filter((d) => d.tone === "crit").length;
@@ -126,7 +133,9 @@ export function VehicleDetailView({
           </div>
           <div className="vd-cta">
             <DocumentDialog
-              vehicleId={detail.id}
+              ownerId={detail.id}
+              ownerField="vehicleId"
+              action={saveVehicleDocument}
               docTypes={docTypes}
               trigger={
                 <button className="cbtn primary">
@@ -193,7 +202,9 @@ export function VehicleDetailView({
               <DocCard key={d.id} doc={d} vehicleId={detail.id} docTypes={docTypes} />
             ))}
             <DocumentDialog
-              vehicleId={detail.id}
+              ownerId={detail.id}
+              ownerField="vehicleId"
+              action={saveVehicleDocument}
               docTypes={docTypes}
               trigger={
                 <button className="vd-doc-add">
@@ -225,20 +236,46 @@ export function VehicleDetailView({
           </div>
         )}
 
-        {tab === "driver" &&
-          (detail.driverName ? (
-            <div>
-              <div className="vd-driver-card">
-                <Avatar name={detail.driverName} size={54} />
-                <div className="dc-main">
-                  <div className="dc-name">{detail.driverName}</div>
-                  <div className="dc-sub">Motorista atribuído</div>
+        {tab === "driver" && (
+          <div>
+            <div className="vd-driver-head">
+              {detail.driverId ? (
+                <Link href={`/motoristas/${detail.driverId}`} className="vd-driver-card link">
+                  <Avatar name={detail.driverName ?? "?"} size={54} hue={206} />
+                  <div className="dc-main">
+                    <div className="dc-name">{detail.driverName}</div>
+                    <div className="dc-sub">Motorista atribuído · ver ficha</div>
+                  </div>
+                </Link>
+              ) : (
+                <div className="vd-driver-card empty">
+                  <span className="dc-empty-ico">
+                    <UserX size={26} />
+                  </span>
+                  <div className="dc-main">
+                    <div className="dc-name">Sem motorista</div>
+                    <div className="dc-sub">Nenhum condutor atribuído</div>
+                  </div>
                 </div>
-              </div>
-              <div className="eyebrow" style={{ margin: "26px 0 12px" }}>
-                Histórico de atribuições
-              </div>
-              {detail.history.map((h, i) => (
+              )}
+              <AssignDriverDialog
+                vehicleId={detail.id}
+                plate={detail.plate}
+                currentDriverId={detail.driverId}
+                drivers={drivers}
+                trigger={
+                  <button className="cbtn primary" style={{ height: 40 }}>
+                    <UserCog size={16} /> {detail.driverId ? "Trocar" : "Atribuir"}
+                  </button>
+                }
+              />
+            </div>
+
+            <div className="eyebrow" style={{ margin: "26px 0 12px" }}>
+              Histórico de atribuições
+            </div>
+            {detail.history.length > 0 ? (
+              detail.history.map((h, i) => (
                 <div key={i} className="vd-hist">
                   <CalendarDays size={16} /> {h.driverName} — desde{" "}
                   {new Date(h.assignedAt).toLocaleDateString("pt-BR")}
@@ -246,11 +283,12 @@ export function VehicleDetailView({
                     ? ` até ${new Date(h.unassignedAt).toLocaleDateString("pt-BR")}`
                     : " (atual)"}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="vd-hist">Sem motorista atribuído no momento.</div>
-          ))}
+              ))
+            ) : (
+              <div className="vd-hist">Nenhuma atribuição registrada.</div>
+            )}
+          </div>
+        )}
 
         {SOON_TABS.some((t) => t.id === tab) &&
           (() => {
@@ -310,7 +348,9 @@ function DocCard({
           </a>
         )}
         <DocumentDialog
-          vehicleId={vehicleId}
+          ownerId={vehicleId}
+          ownerField="vehicleId"
+          action={saveVehicleDocument}
           docTypes={docTypes}
           initial={{
             id: doc.id,
@@ -325,6 +365,7 @@ function DocCard({
             </button>
           }
         />
+        <DeleteDocButton docId={doc.id} ownerId={vehicleId} kind="vehicle" label={doc.docLabel} />
       </div>
     </div>
   );

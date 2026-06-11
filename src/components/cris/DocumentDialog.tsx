@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import Link from "next/link";
-import { saveVehicleDocument } from "@/lib/actions/documents";
+import type { DocFormState } from "@/lib/actions/documents";
 
 export type DocTypeOption = { key: string; label: string };
 
@@ -30,21 +30,28 @@ const labelCls = "text-xs font-bold text-[var(--text-2)]";
 const inputCls =
   "h-11 rounded-xl border border-[var(--border)] bg-[var(--panel-solid)] px-3 text-sm text-[var(--text)] outline-none focus:border-[var(--brand-amber)] focus:ring-4 focus:ring-[color-mix(in_oklab,var(--brand-amber)_18%,transparent)]";
 
-/** Dialog para cadastrar ou renovar um documento de veículo. */
+/**
+ * Dialog para cadastrar/renovar um documento (veículo ou motorista).
+ * `action` + `ownerField` parametrizam o dono — o restante é igual nos dois.
+ */
 export function DocumentDialog({
-  vehicleId,
+  ownerId,
+  ownerField,
+  action,
   trigger,
   initial,
   docTypes,
 }: {
-  vehicleId: string;
+  ownerId: string;
+  ownerField: string; // "vehicleId" | "driverId"
+  action: (prev: DocFormState, formData: FormData) => Promise<DocFormState>;
   trigger: ReactElement;
   initial?: DocInitial;
   docTypes: DocTypeOption[];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(saveVehicleDocument, {});
+  const [state, formAction, pending] = useActionState(action, {});
   const isEdit = !!initial?.id;
 
   useEffect(() => {
@@ -68,7 +75,7 @@ export function DocumentDialog({
         </DialogHeader>
 
         <form action={formAction} className="space-y-4">
-          <input type="hidden" name="vehicleId" value={vehicleId} />
+          <input type="hidden" name={ownerField} value={ownerId} />
           {initial?.id && <input type="hidden" name="id" value={initial.id} />}
 
           <div className={field}>

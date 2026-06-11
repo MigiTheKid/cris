@@ -201,7 +201,7 @@ export type Database = {
           created_by: string | null
           deleted_at: string | null
           doc_number: string | null
-          doc_type: Database["public"]["Enums"]["driver_doc_type"]
+          doc_type: string
           driver_id: string
           expires_at: string | null
           file_path: string | null
@@ -215,7 +215,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           doc_number?: string | null
-          doc_type: Database["public"]["Enums"]["driver_doc_type"]
+          doc_type: string
           driver_id: string
           expires_at?: string | null
           file_path?: string | null
@@ -229,7 +229,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           doc_number?: string | null
-          doc_type?: Database["public"]["Enums"]["driver_doc_type"]
+          doc_type?: string
           driver_id?: string
           expires_at?: string | null
           file_path?: string | null
@@ -245,6 +245,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_documents_doc_type_fkey"
+            columns: ["doc_type"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["key"]
           },
           {
             foreignKeyName: "driver_documents_driver_id_fkey"

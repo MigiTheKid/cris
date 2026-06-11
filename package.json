@@ -13,6 +13,7 @@
     "format:check": "prettier --check .",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:rls": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test",
     "prepare": "husky"
   },

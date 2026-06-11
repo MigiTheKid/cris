@@ -21,6 +21,99 @@ Estado do projeto para retomar a qualquer momento.
 - Ficou um **CIPP de teste** no AUH-6B05 (PDF de 199 bytes) — clicar no 📄 pra ver
   abrir; depois substituir pelos dados reais.
 
+## ✅ Motoristas COMPLETO + verificado (10/06)
+
+- Migration `20260610200000_driver_document_types.sql`: tipos do motorista no
+  catálogo (CNH, MOPP, Toxicológico, ASO, Outro — scope='driver') + `driver_documents`
+  convertida pra usar o catálogo (enum→text + FK), view v_expiry_alerts recriada.
+- `DocumentDialog` **generalizado** (`action` + `ownerField`/`ownerId`) → serve
+  veículo **e** motorista (DRY). VehicleDetailView atualizado pra passar a action.
+- `saveDriverDocument` + rota `/api/driver-documents/[id]/pdf` (URL assinada).
+- `getDriverList`/`getDriverDetail` (`src/lib/data/drivers.ts`, CPF mascarado,
+  veículo atual via assignment, status documental pelo pior vencimento).
+- Páginas reais: `/motoristas` (tabela 9 condutores) + `/motoristas/[id]` (hero,
+  abas Documentos/Identificação, grid de docs, add/renovar).
+- **Verificado no browser**: lista OK (CPF/veículo/status), detalhe OK, dialog com
+  catálogo certo (CNH…Outro), salvou CNH → card "277d" + badge "Em dia" + 1/1; doc
+  de teste removido depois (soft-delete).
+
+## ✅ Atribuir/trocar motorista COMPLETO + verificado (10/06)
+
+- `saveAssignment` (`src/lib/actions/assignments.ts`): encerra o vínculo ativo do
+  veículo E do motorista (respeita os índices únicos: 1 motorista/veículo e
+  1 veículo/motorista), abre o novo; driverId vazio = só desatribui.
+- `AssignDriverDialog.tsx`: lista os motoristas marcando "livre" / "neste veículo"
+  / "em PLACA — será movido"; opção "Sem motorista". Ligado na aba Motorista do
+  detalhe (botão Trocar/Atribuir), card do motorista vira link pra ficha.
+- Detalhe do veículo passou a buscar `getDriverList()` pra alimentar o dialog.
+- **Verificado no browser**: troquei Daurio→Gabriel, histórico encerrou o anterior,
+  índice único confirmado no banco (1 ativo/veículo); revertido pro seed depois.
+
+## ✅ Configurações: usuários + empresas + troca de senha (10/06)
+
+- **Usuários (admin-only)**: `getUserList` + `createUser`/`updateUser`/`resetUserPassword`
+  (`src/lib/actions/users.ts`, via service role com trava `requireAdmin()` no código +
+  anti-lockout: admin não rebaixa/desativa a si mesmo). `UserDialog` (criar/editar,
+  CPF é login imutável, cargo, ativo), botão 🔑 redefine senha (`ResetPasswordButton`).
+  Novo usuário nasce com `mudar123` + `must_change_password=true`; driver ganha
+  driver_profile vazio.
+- **Troca de senha forçada**: `changeOwnPassword` + página `/trocar-senha` +
+  `ChangePasswordForm`; gate `must_change_password` no layout (app) e no /motorista.
+- **Empresas (admin-only)**: `getCompanies` + `saveCompany` + `CompanyDialog`
+  (edita razão social/CNPJ/endereço das 2 existentes).
+- Seções Usuários/Empresas só aparecem para admin; gerente vê só Tipos de documento.
+- Seed: admin nasce com `must_change_password=false` (bootstrap confiável).
+- **Verificado no browser ponta a ponta**: criei gerente → conta Auth criada →
+  logout/login como ele → caiu em /trocar-senha → troquei senha → painel como Gerente;
+  gerente não vê seções admin; edição de empresa refletiu. Artefatos de teste limpos.
+
+## ✅ Auditoria de ações sensíveis (10/06)
+
+- `logAudit()` (`src/lib/audit.ts`): grava em `audit_logs` via **admin client**
+  (a tabela só tem policy de leitura para staff, sem INSERT) com o ator = `auth.uid()`.
+  **Best-effort**: nunca lança — falha de log não derruba a operação.
+- Instrumentadas todas as actions sensíveis: usuários (criar/editar/redefinir senha),
+  atribuição (assign/unassign), documentos de veículo (criar/editar/excluir) e de
+  motorista (criar/editar), veículos (criar/editar), empresas, tipos de documento
+  (criar/editar/alternar) e troca da própria senha.
+- `getAuditLog(40)` + seção **Auditoria** (admin-only) em Configurações:
+  `AuditTimeline` com ícone+dot por ação, ator, descrição (a partir do `detail`
+  gravado: placa/nome/cargo/razão social/tipo) e horário; mais recente no topo.
+- **Verificado no browser**: editei empresa e alternei um tipo → os 2 eventos
+  apareceram na timeline com ator "Gabriel Krull" e horário. Dados de teste revertidos
+  e `audit_logs` zerada (Miguel começa com a auditoria limpa).
+
+## ✅ Teste de integração de RLS (10/06)
+
+- `integration/rls.test.ts` + `vitest.integration.config.ts` (env node, lê `.env.local`).
+  Roda com **`pnpm test:rls`** (exige Docker + seed). Fora do `pnpm test` padrão.
+- Loga como motorista (anon key + senha) e prova o isolamento por cargo:
+  vê só o veículo atribuído e seus documentos, só o próprio perfil e os próprios
+  documentos; **não** lê veículo/documentos alheios nem a auditoria; **pode** ler
+  empresas. Controle: o service role vê a frota inteira (base não está vazia).
+- **10/10 testes passando.** Unitários seguem 7/7 (integração excluída do run padrão).
+
+## ✅ Excluir documento (10/06)
+
+- `deleteDriverDocument` (espelho do de veículo, auditado) + `DeleteDocButton`
+  (client, `window.confirm` + `useTransition` + `router.refresh`) nos cards de
+  documento de **veículo e motorista**. Soft delete (`deleted_at`) — some da lista
+  e dos alertas, mas o histórico/auditoria fica. CSS `.d-mini-btn.danger` (hover vermelho).
+- **Verificado no browser**: excluí o CRLV do MJE-8F98 → sumiu do card (ao vivo e
+  após reload), `deleted_at` setado no banco, auditoria registrou "delete". Restaurado.
+
+## ✅ Auditoria: filtros, paginação e export (10/06)
+
+- Página própria `/configuracoes/auditoria` (admin-only): filtros por entidade,
+  ação e autor (via querystring, `AuditFilters`), paginação 25/página (Anterior/Próxima),
+  e **Exportar CSV** (rota `/api/audit/export`, admin-only, com BOM + `;` p/ Excel pt-BR).
+- `getAuditPage`/`getAuditForExport`/`getAuditActors` em `src/lib/data/audit.ts`;
+  rótulos compartilhados em `src/lib/audit-labels.ts`.
+- Configurações: a seção Auditoria virou resumo (8 últimos) com botão "Ver tudo".
+- **Verificado no browser** com 30 eventos de teste: lista 25 + "1–25 de 30",
+  filtro entidade=Veículo → 6 (todos veículo), página 2 → "26–30 de 30",
+  export CSV (200, attachment, escaping correto). Eventos de teste limpos.
+
 ## ⏳ Verificação pendente (Miguel testar no browser)
 
 O preview MCP ficou instável (após conflito de build com o dev), então estes
@@ -66,9 +159,9 @@ itens foram verificados só por typecheck+lint+build — falta o teste de clique
 
 ## Pendências / próximo (ver BACKLOG.md)
 
-1. Detalhe do veículo + cadastro/edição de documentos (acende status reais; é o
-   que torna os dados de amostra desnecessários).
-2. Detalhe do motorista + documentos pessoais.
+1. ✅ Detalhe do veículo + cadastro/edição de documentos.
+2. ✅ Detalhe do motorista + documentos pessoais.
+   2b. ✅ Atribuir/trocar motorista no veículo.
 3. App do Motorista (mobile) — hoje só o placeholder /motorista. **Miguel vai
    redesenhar e repensar as funções; deixar por último.**
 4. Teste de integração de RLS (motorista não vê veículo alheio) — conceito exige.

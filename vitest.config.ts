@@ -8,8 +8,8 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     globals: true,
-    // E2E (Playwright) vive em /e2e e roda por outro runner
-    exclude: ["**/node_modules/**", "**/e2e/**", "**/.next/**"],
+    // E2E (Playwright) vive em /e2e; integração de RLS roda por outro config.
+    exclude: ["**/node_modules/**", "**/e2e/**", "**/.next/**", "**/integration/**"],
   },
   resolve: {
     alias: {

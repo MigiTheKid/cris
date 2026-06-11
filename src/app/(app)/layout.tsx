@@ -14,6 +14,7 @@ const ROLE_LABEL: Record<string, string> = {
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
+  if (profile.mustChangePassword) redirect("/trocar-senha");
   if (profile.role === "driver") redirect("/motorista");
 
   const user = { name: profile.fullName, roleLabel: ROLE_LABEL[profile.role] ?? profile.role };

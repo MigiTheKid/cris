@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { logAudit } from "@/lib/audit";
 
 export type DocTypeFormState = { error?: string; ok?: boolean };
 
@@ -47,6 +48,7 @@ export async function saveDocumentType(
       .update({ label, description, sort })
       .eq("key", key);
     if (error) return { error: `Não foi possível salvar: ${error.message}` };
+    await logAudit({ action: "update", entity: "document_type", entityId: key, detail: { label } });
     revalidateAll();
     return { ok: true };
   }
@@ -59,6 +61,12 @@ export async function saveDocumentType(
       .from("document_types")
       .insert({ key: candidate, scope, label, description, sort });
     if (!error) {
+      await logAudit({
+        action: "create",
+        entity: "document_type",
+        entityId: candidate,
+        detail: { label, scope },
+      });
       revalidateAll();
       return { ok: true };
     }
@@ -72,5 +80,11 @@ export async function saveDocumentType(
 export async function toggleDocumentType(key: string, isActive: boolean): Promise<void> {
   const supabase = await createClient();
   await supabase.from("document_types").update({ is_active: isActive }).eq("key", key);
+  await logAudit({
+    action: "toggle",
+    entity: "document_type",
+    entityId: key,
+    detail: { isActive },
+  });
   revalidateAll();
 }

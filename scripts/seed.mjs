@@ -9,7 +9,9 @@ if (!url || !serviceKey) {
   console.error("Faltam NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY no .env.local");
   process.exit(1);
 }
-const db = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+const db = createClient(url, serviceKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
 const DOMAIN = "auth.topdiesel.local";
 const DEFAULT_PASSWORD = "mudar123"; // troca forçada no 1º acesso
@@ -63,11 +65,20 @@ const ASSIGNMENTS = [
 const DOC_PLAN = {
   "AUH-6B05": [["crlv", -12]], // vencido
   "EVK-1792": [["crlv", -3]], // vencido
-  "HTP-2H05": [["crlv", 4], ["cipp", 40]], // crítico
-  "RAA-9I02": [["crlv", 180], ["cipp", 6]], // crítico (CIPP)
+  "HTP-2H05": [
+    ["crlv", 4],
+    ["cipp", 40],
+  ], // crítico
+  "RAA-9I02": [
+    ["crlv", 180],
+    ["cipp", 6],
+  ], // crítico (CIPP)
   "PRP-3F41": [["crlv", 11]], // alerta
   "MMJ-7325": [["crlv", 14]], // alerta
-  "MJE-8F98": [["crlv", 220], ["cipp", 21]], // atenção (CIPP real ~24/06)
+  "MJE-8F98": [
+    ["crlv", 220],
+    ["cipp", 21],
+  ], // atenção (CIPP real ~24/06)
   "JAQ-3B19": [["crlv", 27]], // atenção
   "SXJ-8I34": [["crlv", 300]],
   "SXJ-8C24": [["crlv", 130]],
@@ -102,7 +113,11 @@ async function ensureUser({ cpf, full_name, role = "driver" }) {
   }
   const { error: pErr } = await db
     .from("profiles")
-    .upsert({ id, cpf, full_name, role }, { onConflict: "id" });
+    // Admin é a conta bootstrap (confiável) — não força troca; os demais sim.
+    .upsert(
+      { id, cpf, full_name, role, must_change_password: role !== "admin" },
+      { onConflict: "id" },
+    );
   if (pErr) throw new Error(`profile ${cpf}: ${pErr.message}`);
   return id;
 }
@@ -126,7 +141,10 @@ async function main() {
     .eq("kind", "top_diesel")
     .single();
   const vehRows = VEHICLES.map((v) => ({ ...v, company_id: company.id, created_by: adminId }));
-  const { data: insertedVeh, error: vErr } = await db.from("vehicles").insert(vehRows).select("id, plate");
+  const { data: insertedVeh, error: vErr } = await db
+    .from("vehicles")
+    .insert(vehRows)
+    .select("id, plate");
   if (vErr) throw new Error(`vehicles: ${vErr.message}`);
   const byPlate = Object.fromEntries(insertedVeh.map((v) => [v.plate, v.id]));
 

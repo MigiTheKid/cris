@@ -250,6 +250,15 @@
   color: var(--brand-amber);
   border-color: var(--border);
 }
+.d-mini-btn.danger:hover {
+  color: var(--crit);
+  border-color: color-mix(in oklab, var(--crit) 35%, transparent);
+  background: color-mix(in oklab, var(--crit) 10%, transparent);
+}
+.d-mini-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
 .vd-doc-add {
   display: flex;
   align-items: center;
@@ -296,6 +305,16 @@
   margin-top: 5px;
 }
 
+.vd-driver-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.vd-driver-head .vd-driver-card {
+  flex: 1;
+  min-width: 240px;
+}
 .vd-driver-card {
   display: flex;
   align-items: center;
@@ -307,11 +326,27 @@
   width: 100%;
   max-width: 460px;
   text-align: left;
-  cursor: pointer;
   transition: border-color 0.18s;
+  text-decoration: none;
+  color: inherit;
 }
-.vd-driver-card:hover {
+.vd-driver-card.link {
+  cursor: pointer;
+}
+.vd-driver-card.link:hover {
   border-color: var(--brand-amber);
+}
+.vd-driver-card.empty {
+  border-style: dashed;
+}
+.vd-driver-card .dc-empty-ico {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--hover);
+  color: var(--text-3);
 }
 .vd-driver-card .dc-main {
   flex: 1;
@@ -385,4 +420,69 @@
   .vd-meta {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+/* ============================================================
+   Auditoria — timeline de ações sensíveis (Configurações)
+   ============================================================ */
+.audit-list {
+  display: flex;
+  flex-direction: column;
+}
+.audit-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 11px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.audit-row:last-child {
+  border-bottom: 0;
+}
+.audit-ico {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--panel-solid);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+.audit-ico .dot {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--panel);
+}
+.audit-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.audit-text {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+.audit-text strong {
+  color: var(--text);
+  font-weight: 700;
+}
+.audit-obj {
+  color: var(--text-3);
+}
+.audit-time {
+  font-size: 12px;
+  color: var(--text-3);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
