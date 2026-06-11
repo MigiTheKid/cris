@@ -167,3 +167,56 @@ export async function resetUserPassword(id: string): Promise<UserFormState> {
   revalidatePath("/configuracoes");
   return { ok: true };
 }
+
+/**
+ * Apaga PERMANENTEMENTE um usuário (conta de Auth + perfil, via cascade).
+ * Admin-only. Só conclui se a pessoa não tiver histórico — os vínculos
+ * (atribuições, documentos, auditoria, "criado por") usam ON DELETE RESTRICT,
+ * então o banco bloqueia e preservamos o histórico; nesse caso, use Desativar.
+ */
+export async function deleteUserAccount(id: string): Promise<UserFormState> {
+  const gate = await requireAdmin();
+  if (gate.error) return { error: gate.error };
+  if (!id) return { error: "Usuário inválido." };
+  if (id === gate.profile!.id) return { error: "Você não pode apagar a própria conta." };
+
+  const admin = createAdminClient();
+
+  const { data: target } = await admin
+    .from("profiles")
+    .select("role, full_name")
+    .eq("id", id)
+    .maybeSingle();
+  if (!target) return { error: "Usuário não encontrado." };
+
+  // Não deixa apagar o último administrador.
+  if (target.role === "admin") {
+    const { count } = await admin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "admin");
+    if ((count ?? 0) <= 1) return { error: "Não dá para apagar o último administrador." };
+  }
+
+  // Apaga a conta de Auth → cascateia o profile. Se houver histórico, o RESTRICT bloqueia.
+  const { error } = await admin.auth.admin.deleteUser(id);
+  if (error) {
+    console.error("deleteUserAccount:", error.message);
+    return {
+      error:
+        "Não foi possível apagar — provavelmente este usuário já tem histórico no sistema " +
+        "(atribuições, documentos ou ações registradas). Para isso, use Desativar, que bloqueia o " +
+        "acesso sem perder o histórico.",
+    };
+  }
+
+  await logAudit({
+    action: "delete",
+    entity: "user",
+    entityId: id,
+    detail: { name: target.full_name, permanent: true },
+  });
+  revalidatePath("/configuracoes");
+  revalidatePath("/motoristas");
+  return { ok: true };
+}

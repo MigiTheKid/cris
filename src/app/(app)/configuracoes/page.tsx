@@ -11,6 +11,7 @@ import { DocTypeDialog } from "@/components/cris/DocTypeDialog";
 import { UserDialog } from "@/components/cris/UserDialog";
 import { CompanyDialog } from "@/components/cris/CompanyDialog";
 import { ResetPasswordButton } from "@/components/cris/ResetPasswordButton";
+import { DeleteUserButton } from "@/components/cris/DeleteUserButton";
 import { AuditTimeline } from "@/components/cris/AuditTimeline";
 import { TireThresholdsForm } from "@/components/cris/TireThresholdsForm";
 
@@ -130,6 +131,9 @@ export default async function ConfiguracoesPage() {
                             </button>
                           }
                         />
+                        {u.id !== profile?.id && (
+                          <DeleteUserButton userId={u.id} userName={u.name} />
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -140,7 +144,8 @@ export default async function ConfiguracoesPage() {
           <p className="mt-3 text-xs text-[var(--text-3)]">
             Novos usuários acessam com a senha provisória{" "}
             <span className="mono font-bold">mudar123</span> e trocam no 1º acesso. A chave 🔑
-            redefine a senha; desativar bloqueia o acesso sem apagar o histórico.
+            redefine a senha; desativar bloqueia o acesso sem apagar o histórico; a lixeira 🗑️ apaga
+            de vez (só funciona para quem não tem histórico).
           </p>
         </section>
       )}
