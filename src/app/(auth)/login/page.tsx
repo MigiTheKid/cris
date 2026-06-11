@@ -268,7 +268,7 @@ export default function LoginPage() {
             </form>
 
             <div className={styles.afFirstaccess}>
-              Primeiro acesso? <b>Fale com o Gabriel</b> para receber seu login e senha.
+              Primeiro acesso? <b>Fale com o Jucemar (Borguinha)</b> para receber seu login e senha.
             </div>
           </section>
         </div>

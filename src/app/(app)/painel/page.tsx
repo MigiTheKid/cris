@@ -11,6 +11,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { getCommandCenter } from "@/lib/data/command";
+import { getCurrentProfile } from "@/lib/auth";
 import type { StatusTone } from "@/lib/status";
 import { Gauge } from "@/components/cris/Gauge";
 import { ActionNow } from "@/components/cris/ActionNow";
@@ -49,8 +50,10 @@ function pulseDaysText(days: number | null) {
 }
 
 export default async function PainelPage() {
-  const cc = await getCommandCenter();
+  const [cc, profile] = await Promise.all([getCommandCenter(), getCurrentProfile()]);
   const hour = new Date().getHours();
+  const userName = profile?.fullName ?? "Usuário";
+  const firstName = userName.split(" ")[0];
 
   return (
     <div className="pt-1">
@@ -62,7 +65,7 @@ export default async function PainelPage() {
             <span className="hb-label">Centro de Comando</span>
             <span className="hb-div" />
             <span className="hb-user">
-              <Avatar name="Gabriel Krull" size={22} hue={188} /> <b>Gabriel</b>
+              <Avatar name={userName} size={22} hue={188} /> <b>{firstName}</b>
             </span>
           </div>
           <h1 className="cmd-hero-title">
