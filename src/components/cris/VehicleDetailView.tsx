@@ -27,6 +27,7 @@ import { DocumentDialog, type DocTypeOption } from "./DocumentDialog";
 import { VehicleDialog } from "./VehicleDialog";
 import { AssignDriverDialog, type DriverOption } from "./AssignDriverDialog";
 import { DeleteDocButton } from "./DeleteDocButton";
+import { PhotoUpload } from "./PhotoUpload";
 import { saveVehicleDocument } from "@/lib/actions/documents";
 import type { StatusTone } from "@/lib/status";
 import type { VehicleDetail, VehicleDoc } from "@/lib/data/vehicle-detail";
@@ -89,14 +90,20 @@ export function VehicleDetailView({
       <div className="vd-hero cmd-in ci-2">
         <div className="vd-photo">
           <div className="thumb">
-            <div className="thumb-ph">
-              <Truck size={36} />
-              <span className="mono">foto do veículo</span>
-            </div>
+            {detail.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={detail.photoUrl} alt={`Foto do ${detail.plate}`} className="thumb-img" />
+            ) : (
+              <div className="thumb-ph">
+                <Truck size={36} />
+                <span className="mono">foto do veículo</span>
+              </div>
+            )}
             <div className="cine-photo-over" />
           </div>
           <div className="vd-photo-top">
             <span className="vd-comp">{detail.companyLabel}</span>
+            <PhotoUpload ownerId={detail.id} kind="vehicle" />
           </div>
           <div className="vd-plate-over">
             <div className="p">{detail.plate}</div>

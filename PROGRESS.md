@@ -12,6 +12,21 @@ Estado do projeto para retomar a qualquer momento.
   - Admin: CPF `000.000.000-00` / senha `mudar123` (Gabriel Krull) → /painel
   - Motorista: CPF `000.000.001-01` / senha `mudar123` (Daurio) → /motorista
 
+## ✅ M1 finalizada — editar motorista + fotos (10/06)
+
+- **Editar dados do motorista**: `saveDriverProfile` + `DriverProfileDialog`
+  (nome/telefone em profiles; CNH/nascimento/admissão em driver_profiles via upsert).
+  Botão "Editar dados" no hero; telefone na aba Identificação. Corrigido bug de fuso
+  no `fmt()` (formata "YYYY-MM-DD" sem passar por Date).
+- **Fotos de veículo e motorista**: migration `20260610210000_storage_photos.sql`
+  (bucket privado `photos`, jpeg/png/webp até 5 MB, staff). `uploadVehiclePhoto`/
+  `uploadDriverPhoto` (validam, sobem, trocam, removem antiga, auditam); `PhotoUpload`
+  (botão "Trocar foto" → seletor → upload → refresh); `signedPhotoUrl` exibe via URL
+  assinada no hero (substitui placeholder/avatar). Colunas photo_path já existiam.
+- **Verificado no browser**: editei dados do Daurio (datas corretas após o fix),
+  subi foto de veículo e de motorista (aparece no hero, photo_path setado, auditado),
+  artefatos de teste limpos.
+
 ## ✅ Docker resolvido + Upload de PDF VERIFICADO (10/06)
 
 - Docker voltou (engine 29.5.3 — era atualização pendente). Migration do Storage aplicada.

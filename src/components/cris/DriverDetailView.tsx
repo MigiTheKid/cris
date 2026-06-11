@@ -13,11 +13,14 @@ import {
   Truck,
   RefreshCw,
   Plus,
+  Pencil,
 } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { StatusBadge } from "./StatusBadge";
 import { DocumentDialog, type DocTypeOption } from "./DocumentDialog";
 import { DeleteDocButton } from "./DeleteDocButton";
+import { DriverProfileDialog } from "./DriverProfileDialog";
+import { PhotoUpload } from "./PhotoUpload";
 import { saveDriverDocument } from "@/lib/actions/driver-documents";
 import type { StatusTone } from "@/lib/status";
 import type { DriverDetail, DriverDoc } from "@/lib/data/drivers";
@@ -45,7 +48,11 @@ function daysText(days: number | null) {
 }
 
 function fmt(d: string | null) {
-  return d ? new Date(d).toLocaleDateString("pt-BR") : "—";
+  // Datas só-data ("YYYY-MM-DD"): formata sem passar por Date pra não escorregar
+  // um dia pelo fuso (new Date("YYYY-MM-DD") é UTC meia-noite).
+  if (!d) return "—";
+  const [y, m, day] = d.slice(0, 10).split("-");
+  return `${day}/${m}/${y}`;
 }
 
 export function DriverDetailView({
@@ -69,9 +76,19 @@ export function DriverDetailView({
       {/* Hero */}
       <div className="vd-hero cmd-in ci-2">
         <div className="vd-photo" style={{ display: "grid", placeItems: "center" }}>
-          <div className="thumb" style={{ inset: 0, position: "absolute" }} />
-          <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
-            <Avatar name={driver.name} size={96} hue={206} />
+          {driver.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={driver.photoUrl} alt={`Foto de ${driver.name}`} className="thumb-img" />
+          ) : (
+            <div className="thumb" style={{ inset: 0, position: "absolute" }} />
+          )}
+          {!driver.photoUrl && (
+            <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
+              <Avatar name={driver.name} size={96} hue={206} />
+            </div>
+          )}
+          <div className="vd-photo-top" style={{ justifyContent: "flex-end" }}>
+            <PhotoUpload ownerId={driver.id} kind="driver" />
           </div>
         </div>
 
@@ -112,6 +129,21 @@ export function DriverDetailView({
               trigger={
                 <button className="cbtn primary">
                   <Plus size={16} /> Adicionar documento
+                </button>
+              }
+            />
+            <DriverProfileDialog
+              initial={{
+                id: driver.id,
+                fullName: driver.name,
+                phone: driver.phone,
+                cnhCategory: driver.cnhCategory,
+                birthDate: driver.birthDate,
+                hiredAt: driver.hiredAt,
+              }}
+              trigger={
+                <button className="cbtn ghost">
+                  <Pencil size={16} /> Editar dados
                 </button>
               }
             />
@@ -169,6 +201,7 @@ export function DriverDetailView({
               [
                 ["Nome", driver.name, false],
                 ["CPF", driver.cpf, true],
+                ["Telefone", driver.phone ?? "—", true],
                 ["CNH", driver.cnhCategory ?? "—", false],
                 ["Nascimento", fmt(driver.birthDate), true],
                 ["Admissão", fmt(driver.hiredAt), true],

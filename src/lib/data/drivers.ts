@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { expiryStatus, daysUntil, worstExpiryStatus, type ExpiryStatus } from "@/lib/expiry";
 import { statusTone, type StatusTone } from "@/lib/status";
+import { signedPhotoUrl } from "@/lib/storage";
 
 export function maskCpf(cpf: string): string {
   const d = cpf.replace(/\D/g, "").padStart(11, "0").slice(0, 11);
@@ -39,6 +40,8 @@ export type DriverDetail = {
   id: string;
   name: string;
   cpf: string;
+  phone: string | null;
+  photoUrl: string | null;
   cnhCategory: string | null;
   birthDate: string | null;
   hiredAt: string | null;
@@ -108,7 +111,7 @@ export async function getDriverDetail(id: string): Promise<DriverDetail | null> 
   const { data: p } = await db
     .from("profiles")
     .select(
-      `id, full_name, cpf,
+      `id, full_name, cpf, phone, photo_path,
        driver_profiles(cnh_category, birth_date, hired_at),
        documents:driver_documents!driver_id(id, doc_type, doc_number, issued_at, expires_at, file_path, deleted_at,
          dt:document_types(label, description, sort))`,
@@ -168,6 +171,8 @@ export async function getDriverDetail(id: string): Promise<DriverDetail | null> 
     id: p.id,
     name: p.full_name,
     cpf: maskCpf(p.cpf),
+    phone: p.phone,
+    photoUrl: await signedPhotoUrl(db, p.photo_path),
     cnhCategory: p.driver_profiles?.cnh_category ?? null,
     birthDate: p.driver_profiles?.birth_date ?? null,
     hiredAt: p.driver_profiles?.hired_at ?? null,
