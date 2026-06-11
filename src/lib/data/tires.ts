@@ -5,6 +5,7 @@ import {
   positionLabel,
   axlePositions,
   TIRE_STATUS_LABEL,
+  MAX_RECAP_LIVES,
   type AxleKind,
   type TireStatus,
 } from "@/lib/tires";
@@ -442,5 +443,210 @@ export async function getTireDetail(id: string): Promise<TireDetail | null> {
       measuredAt: r.measured_at,
       treadMm: Number(r.tread_mm),
     })),
+  };
+}
+
+/* ---------------- Análise / inteligência (Fase 3) ---------------- */
+
+export type BrandCpk = {
+  brand: string;
+  count: number; // pneus dessa marca
+  kmWithData: number; // km somada dos pneus com dado
+  costWithData: number; // custo somado dos mesmos
+  cpk: number | null; // R$/km ponderado (null = sem km/custo)
+};
+
+export type DecisionTire = {
+  tireId: string;
+  fireNumber: string;
+  brand: string | null;
+  size: string;
+  life: number;
+  treadMm: number | null;
+  tone: StatusTone;
+  vehicleId: string | null;
+  vehiclePlate: string | null;
+  position: string | null;
+};
+
+export type TireAnalytics = {
+  fleet: {
+    total: number;
+    inUse: number;
+    totalInvested: number; // compra + recapes + consertos de todos
+    fleetCpk: number | null; // R$/km ponderado da frota
+    tiresWithCpk: number;
+    avgWearPer1000: number | null; // mm gastos por 1.000 km (média)
+  };
+  byBrand: BrandCpk[]; // ordenado do melhor (menor CPK) ao pior
+  lives: { l1: number; l2: number; l3plus: number };
+  decision: {
+    recap: DecisionTire[]; // janela de recape, carcaça ainda boa (vida < máx)
+    buy: DecisionTire[]; // janela/abaixo, carcaça no fim (vida >= máx)
+  };
+};
+
+/** Indicadores estratégicos dos pneus (CPK, decisão de compra, vidas). */
+export async function getTireAnalytics(): Promise<TireAnalytics> {
+  const db = await createClient();
+  const thresholds = await getTireThresholds();
+
+  const [{ data: tires }, { data: installs }, { data: events }, { data: readings }] =
+    await Promise.all([
+      db
+        .from("tires")
+        .select("id, fire_number, brand, size, current_life, status, tread_new_mm, purchase_value")
+        .is("deleted_at", null),
+      db
+        .from("tire_installations")
+        .select(
+          "tire_id, vehicle_id, axle_number, side, dual_pos, installed_km, removed_km, removed_at, vehicle:vehicles(plate)",
+        ),
+      db.from("tire_events").select("tire_id, cost"),
+      db.from("tire_readings").select("tire_id, tread_mm, measured_at, vehicle_km"),
+    ]);
+
+  // Indexa por pneu.
+  const installsBy = new Map<string, NonNullable<typeof installs>>();
+  for (const i of installs ?? []) {
+    const arr = installsBy.get(i.tire_id) ?? [];
+    arr.push(i);
+    installsBy.set(i.tire_id, arr);
+  }
+  const costBy = new Map<string, number>();
+  for (const e of events ?? []) {
+    if (e.cost != null) costBy.set(e.tire_id, (costBy.get(e.tire_id) ?? 0) + Number(e.cost));
+  }
+  const readingsBy = new Map<string, NonNullable<typeof readings>>();
+  for (const r of readings ?? []) {
+    const arr = readingsBy.get(r.tire_id) ?? [];
+    arr.push(r);
+    readingsBy.set(r.tire_id, arr);
+  }
+
+  let totalInvested = 0;
+  let fleetKm = 0;
+  let fleetCost = 0;
+  let tiresWithCpk = 0;
+  const wearRates: number[] = [];
+  const lives = { l1: 0, l2: 0, l3plus: 0 };
+  const brandAgg = new Map<string, { count: number; km: number; cost: number; withData: number }>();
+  const recap: DecisionTire[] = [];
+  const buy: DecisionTire[] = [];
+  let inUse = 0;
+
+  for (const t of tires ?? []) {
+    const tInstalls = installsBy.get(t.id) ?? [];
+    const tReadings = (readingsBy.get(t.id) ?? [])
+      .slice()
+      .sort((a, b) => (a.measured_at < b.measured_at ? -1 : 1));
+    const cost =
+      (t.purchase_value != null ? Number(t.purchase_value) : 0) + (costBy.get(t.id) ?? 0);
+    totalInvested += cost;
+
+    // Km rastreada: instalações fechadas + trecho da instalação ativa (via última aferição c/ km).
+    let km = 0;
+    for (const i of tInstalls) {
+      if (i.removed_km != null && i.installed_km != null && i.removed_km > i.installed_km) {
+        km += i.removed_km - i.installed_km;
+      }
+    }
+    const active = tInstalls.find((i) => i.removed_at === null) ?? null;
+    if (active?.installed_km != null) {
+      const lastKm = [...tReadings].reverse().find((r) => r.vehicle_km != null)?.vehicle_km ?? null;
+      if (lastKm != null && lastKm > active.installed_km) km += lastKm - active.installed_km;
+    }
+
+    // CPK do pneu (precisa de km e custo).
+    if (km > 0 && cost > 0) {
+      fleetKm += km;
+      fleetCost += cost;
+      tiresWithCpk += 1;
+    }
+
+    // Taxa de desgaste (mm / 1.000 km), quando há base.
+    const withKm = tReadings.filter((r) => r.vehicle_km != null);
+    if (withKm.length >= 2) {
+      const first = withKm[0];
+      const last = withKm[withKm.length - 1];
+      const dKm = (last.vehicle_km as number) - (first.vehicle_km as number);
+      const dTread = Number(first.tread_mm) - Number(last.tread_mm);
+      if (dKm > 0 && dTread > 0) wearRates.push((dTread / dKm) * 1000);
+    } else if (withKm.length === 1 && active?.installed_km != null && t.tread_new_mm != null) {
+      const r = withKm[0];
+      const dKm = (r.vehicle_km as number) - active.installed_km;
+      const dTread = Number(t.tread_new_mm) - Number(r.tread_mm);
+      if (dKm > 0 && dTread > 0) wearRates.push((dTread / dKm) * 1000);
+    }
+
+    // Vidas.
+    if (t.current_life <= 1) lives.l1 += 1;
+    else if (t.current_life === 2) lives.l2 += 1;
+    else lives.l3plus += 1;
+
+    // Marca.
+    const brand = t.brand?.trim() || "Sem marca";
+    const agg = brandAgg.get(brand) ?? { count: 0, km: 0, cost: 0, withData: 0 };
+    agg.count += 1;
+    if (km > 0 && cost > 0) {
+      agg.km += km;
+      agg.cost += cost;
+      agg.withData += 1;
+    }
+    brandAgg.set(brand, agg);
+
+    // Decisão (só pneus montados com sulco na janela ou abaixo).
+    if (t.status === "em_uso") {
+      inUse += 1;
+      const lastReading = tReadings[tReadings.length - 1] ?? null;
+      const tread = lastReading ? Number(lastReading.tread_mm) : null;
+      if (tread != null && tread < thresholds.okMm) {
+        const d: DecisionTire = {
+          tireId: t.id,
+          fireNumber: t.fire_number,
+          brand: t.brand,
+          size: t.size,
+          life: t.current_life,
+          treadMm: tread,
+          tone: treadTone(tread, thresholds).tone,
+          vehicleId: active?.vehicle_id ?? null,
+          vehiclePlate: active?.vehicle?.plate ?? null,
+          position: active ? positionCode(active.axle_number, active.side, active.dual_pos) : null,
+        };
+        if (t.current_life >= MAX_RECAP_LIVES) buy.push(d);
+        else recap.push(d);
+      }
+    }
+  }
+
+  const byBrand: BrandCpk[] = [...brandAgg.entries()]
+    .map(([brand, a]) => ({
+      brand,
+      count: a.count,
+      kmWithData: a.km,
+      costWithData: a.cost,
+      cpk: a.km > 0 ? a.cost / a.km : null,
+    }))
+    .sort((a, b) => {
+      if (a.cpk == null) return 1;
+      if (b.cpk == null) return -1;
+      return a.cpk - b.cpk;
+    });
+
+  const sortByUrgency = (a: DecisionTire, b: DecisionTire) => (a.treadMm ?? 99) - (b.treadMm ?? 99);
+
+  return {
+    fleet: {
+      total: (tires ?? []).length,
+      inUse,
+      totalInvested,
+      fleetCpk: fleetKm > 0 ? fleetCost / fleetKm : null,
+      tiresWithCpk,
+      avgWearPer1000:
+        wearRates.length > 0 ? wearRates.reduce((s, w) => s + w, 0) / wearRates.length : null,
+    },
+    byBrand,
+    lives,
+    decision: { recap: recap.sort(sortByUrgency), buy: buy.sort(sortByUrgency) },
   };
 }

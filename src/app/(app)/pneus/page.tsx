@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, Disc, ChevronRight } from "lucide-react";
+import { Plus, Disc, ChevronRight, TrendingDown } from "lucide-react";
 import { getTireList } from "@/lib/data/tires";
 import { getTireThresholds } from "@/lib/data/settings";
 import { TIRE_STATUS_LABEL } from "@/lib/tires";
@@ -43,6 +43,9 @@ export default async function PneusPage() {
           </p>
         </div>
         <div className="page-actions">
+          <Link href="/pneus/analise" className="cbtn ghost">
+            <TrendingDown size={16} /> Análise
+          </Link>
           <TireDialog
             trigger={
               <button className="cbtn primary">

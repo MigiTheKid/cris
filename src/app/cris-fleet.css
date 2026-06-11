@@ -776,3 +776,19 @@
   align-items: center;
   gap: 8px;
 }
+
+/* ---- CPK bar (análise de pneus) ---- */
+.cpk-bar {
+  flex: 1;
+  max-width: 160px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--hover);
+  overflow: hidden;
+}
+.cpk-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--brand-teal);
+}

@@ -22,6 +22,12 @@ export const TIRE_STATUS_LABEL: Record<TireStatus, string> = {
   vendido: "Vendido",
 };
 
+/**
+ * Vidas típicas de uma carcaça (nova + 2 recapagens). Ao atingir a janela de
+ * recape já na 3ª vida, a recomendação vira COMPRAR novo (carcaça no fim).
+ */
+export const MAX_RECAP_LIVES = 3;
+
 /** Limiares de sulco (mm). Personalizáveis em Configurações (app_settings). */
 export type TireThresholds = { okMm: number; recapMm: number };
 

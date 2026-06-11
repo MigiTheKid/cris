@@ -12,6 +12,25 @@ Estado do projeto para retomar a qualquer momento.
   - Admin: CPF `000.000.000-00` / senha `mudar123` (Gabriel Krull) → /painel
   - Motorista: CPF `000.000.001-01` / senha `mudar123` (Daurio) → /motorista
 
+## ✅ M2 PNEUS — Fase 3: CPK, decisão de compra, análise (11/06) — tela do Fermino
+
+- `getTireAnalytics()` (`src/lib/data/tires.ts`): **CPK ponderado por marca**
+  (Σcusto ÷ Σkm dos pneus com base — compra+recapes+consertos), CPK médio da
+  frota, investido total, distribuição por vida, taxa de desgaste; **decisão de
+  compra** — pneus montados com sulco < limiar verde, separados por carcaça:
+  vida < 3 → **Recapar** (carcaça boa), vida ≥ 3 → **Comprar novo** (carcaça no
+  fim). Constante `MAX_RECAP_LIVES=3` em tires.ts.
+- Página `/pneus/analise`: KPIs (investido/CPK frota/em uso/precisam de ação),
+  ranking **Custo por km por marca** com selo "melhor" + barras, cards **Recapar
+  vs Comprar** (acionáveis, link pro veículo/pneu), reaproveitamento por vida.
+  Botão "Análise" no cabeçalho da /pneus.
+- **Verificado com cenário de demo** (Bridgestone/Pirelli/Michelin, sucateados +
+  montados): CPK por marca correto (Bridgestone R$0,02 = melhor), CPK frota
+  R$0,03 (10.550÷400.000), decisão certa (903 3ª vida→comprar; 151+904→recapar
+  por urgência de sulco), vidas 3/2/1. Demo limpo; 150/151 do Miguel preservados.
+- **M2 PNEUS COMPLETA** (Fases 1-3 + limiares). Falta importar a planilha real
+  (fogo 94–174) — tarefa do Gabriel/futuro script.
+
 ## ✅ M2 PNEUS — Fase 2: rodízio + recapagem + linha da vida (11/06)
 
 - **Rodízio em 1 passo**: function SQL `move_tire` (atômica — nunca deixa pneu
