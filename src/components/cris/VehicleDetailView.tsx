@@ -32,10 +32,12 @@ import { CouplingDialog, type TrailerOption } from "./CouplingDialog";
 import { CompositionStrip } from "./CompositionStrip";
 import { DeleteDocButton } from "./DeleteDocButton";
 import { DangerDeleteDialog } from "./DangerDeleteDialog";
+import { OilChangeDialog } from "./OilChangeDialog";
 import { PhotoUpload } from "./PhotoUpload";
 import { VehicleTiresTab } from "./VehicleTiresTab";
 import { deleteVehicle } from "@/lib/actions/vehicles";
 import type { VehicleRodado, StockTire } from "@/lib/data/tires";
+import type { VehicleOil } from "@/lib/data/oil-changes";
 import type { TireThresholds } from "@/lib/tires";
 import { saveVehicleDocument } from "@/lib/actions/documents";
 import type { StatusTone } from "@/lib/status";
@@ -62,7 +64,6 @@ const DOC_ICON: Record<string, typeof FileText> = {
 };
 
 const SOON_TABS = [
-  { id: "oil", label: "Trocas de óleo", icon: Droplet, soon: "M2" },
   { id: "maint", label: "Manutenções", icon: Wrench, soon: "M3" },
   { id: "fuel", label: "Abastecimentos", icon: Fuel, soon: "M3" },
 ] as const;
@@ -82,6 +83,7 @@ export function VehicleDetailView({
   rodados,
   stock,
   thresholds,
+  oil,
   canDelete = false,
 }: {
   detail: VehicleDetail;
@@ -91,6 +93,7 @@ export function VehicleDetailView({
   rodados: VehicleRodado[];
   stock: StockTire[];
   thresholds: TireThresholds;
+  oil: VehicleOil;
   canDelete?: boolean;
 }) {
   const [tab, setTab] = useState<string>("docs");
@@ -188,6 +191,7 @@ export function VehicleDetailView({
                 capacity: detail.capacity,
                 companyKind: detail.companyKind,
                 status: detail.vehicleStatus,
+                maintenancePlan: detail.maintenancePlan,
               }}
               trigger={
                 <button className="cbtn ghost">
@@ -250,6 +254,15 @@ export function VehicleDetailView({
           onClick={() => setTab("tires")}
         >
           <Disc size={16} /> Pneus
+        </button>
+        <button
+          className={"vd-tab" + (tab === "oil" ? " active" : "")}
+          onClick={() => setTab("oil")}
+        >
+          <Droplet size={16} /> Trocas de óleo
+          {oil.status.tone !== "ok" && oil.status.tone !== "idle" && (
+            <span className="mini" style={{ background: TONE_VAR[oil.status.tone] }} />
+          )}
         </button>
         {SOON_TABS.map((t) => (
           <button
@@ -490,6 +503,125 @@ export function VehicleDetailView({
 
         {tab === "tires" && (
           <VehicleTiresTab rodados={rodados} stock={stock} thresholds={thresholds} />
+        )}
+
+        {tab === "oil" && (
+          <div>
+            <div className="comp-head">
+              <div className="glass flex-1 rounded-2xl p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] font-bold tracking-[0.1em] text-[var(--text-3)] uppercase">
+                      Próxima troca
+                    </div>
+                    <div className="mono mt-1 text-2xl font-bold text-[var(--text)]">
+                      {oil.status.nextKm != null
+                        ? `${oil.status.nextKm.toLocaleString("pt-BR")} km`
+                        : "—"}
+                    </div>
+                  </div>
+                  <StatusBadge tone={oil.status.tone} label={oil.status.label} />
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-3 border-t border-[var(--border)] pt-3 text-sm">
+                  <div>
+                    <div className="text-xs text-[var(--text-3)]">Última troca</div>
+                    <div className="mono font-semibold text-[var(--text)]">
+                      {oil.status.lastChangeKm != null
+                        ? `${oil.status.lastChangeKm.toLocaleString("pt-BR")} km`
+                        : "—"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-[var(--text-3)]">Intervalo</div>
+                    <div className="mono font-semibold text-[var(--text)]">
+                      {oil.status.intervalKm != null
+                        ? `${oil.status.intervalKm.toLocaleString("pt-BR")} km`
+                        : "—"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-[var(--text-3)]">Km atual (estimado)</div>
+                    <div className="mono font-semibold text-[var(--text)]">
+                      {oil.status.latestKm != null
+                        ? `${oil.status.latestKm.toLocaleString("pt-BR")} km`
+                        : "—"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <OilChangeDialog
+                vehicleId={detail.id}
+                trigger={
+                  <button className="cbtn primary" style={{ height: 40 }}>
+                    <Plus size={16} /> Registrar troca
+                  </button>
+                }
+              />
+            </div>
+
+            {detail.maintenancePlan && (
+              <div className="mt-3 flex items-start gap-2 rounded-xl border border-[color-mix(in_oklab,var(--brand-amber)_35%,transparent)] bg-[color-mix(in_oklab,var(--brand-amber)_10%,transparent)] px-4 py-3 text-sm text-[var(--text-2)]">
+                <Wrench size={16} className="mt-0.5 text-[var(--brand-amber)]" />
+                <span>
+                  <b className="text-[var(--text)]">Plano de manutenção:</b>{" "}
+                  {detail.maintenancePlan}
+                </span>
+              </div>
+            )}
+
+            <div className="eyebrow" style={{ margin: "26px 0 12px" }}>
+              Histórico de trocas
+            </div>
+            {oil.changes.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {oil.changes.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center gap-3 rounded-xl border border-[var(--border)] px-4 py-3"
+                  >
+                    <Droplet size={16} className="text-[var(--text-3)]" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold text-[var(--text)]">
+                        <span className="mono">{c.odometerKm.toLocaleString("pt-BR")} km</span>
+                        {c.nextKm != null && (
+                          <>
+                            {" → "}
+                            <span className="mono">{c.nextKm.toLocaleString("pt-BR")} km</span>
+                          </>
+                        )}
+                      </div>
+                      <div className="text-xs text-[var(--text-3)]">
+                        {[
+                          c.changedAt
+                            ? `${c.changedAt.slice(8, 10)}/${c.changedAt.slice(5, 7)}/${c.changedAt.slice(0, 4)}`
+                            : null,
+                          c.oilSpec,
+                          c.filterChanged ? "filtro trocado" : null,
+                          c.vendor,
+                          c.cost != null
+                            ? c.cost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                            : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ") || "sem detalhes"}
+                      </div>
+                    </div>
+                    <OilChangeDialog
+                      vehicleId={detail.id}
+                      initial={c}
+                      trigger={
+                        <button className="d-mini-btn" title="Editar">
+                          <Pencil size={15} />
+                        </button>
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="vd-hist">Nenhuma troca registrada ainda.</div>
+            )}
+          </div>
         )}
 
         {SOON_TABS.some((t) => t.id === tab) &&

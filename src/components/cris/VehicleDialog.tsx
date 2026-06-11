@@ -50,6 +50,7 @@ export type VehicleInitial = {
   capacity?: string | null;
   companyKind?: CompanyKind;
   status?: VehicleStatus;
+  maintenancePlan?: string | null;
 };
 
 const field = "flex flex-col gap-1.5";
@@ -213,6 +214,19 @@ export function VehicleDialog({
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className={field}>
+            <label htmlFor="v-plan" className={labelCls}>
+              Plano de manutenção (informativo)
+            </label>
+            <input
+              id="v-plan"
+              name="maintenancePlan"
+              defaultValue={initial?.maintenancePlan ?? ""}
+              className={inputCls}
+              placeholder="ex.: Plano BEST Mercedes — troca com 135.000 km"
+            />
           </div>
 
           {state.error && (

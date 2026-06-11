@@ -22,6 +22,7 @@ export const ENTITY_LABEL: Record<string, string> = {
   assignment: "Atribuição",
   coupling: "Engate de reboque",
   tire: "Pneu",
+  oil_change: "Troca de óleo",
   settings: "Parâmetros",
   document_type: "Tipo de documento",
   user: "Usuário",

@@ -4,6 +4,7 @@ import { getDocumentTypes } from "@/lib/data/document-types";
 import { getDriverList } from "@/lib/data/drivers";
 import { getTrailerOptions } from "@/lib/data/vehicles";
 import { getVehicleRodado, getStockTires, type VehicleRodado } from "@/lib/data/tires";
+import { getVehicleOilChanges } from "@/lib/data/oil-changes";
 import { getTireThresholds } from "@/lib/data/settings";
 import { getCurrentProfile } from "@/lib/auth";
 import { VehicleDetailView } from "@/components/cris/VehicleDetailView";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [detail, docTypes, drivers, trailers, rodado, stock, thresholds, profile] =
+  const [detail, docTypes, drivers, trailers, rodado, stock, thresholds, oil, profile] =
     await Promise.all([
       getVehicleDetail(id),
       getDocumentTypes("vehicle", true),
@@ -21,6 +22,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
       getVehicleRodado(id),
       getStockTires(),
       getTireThresholds(),
+      getVehicleOilChanges(id),
       getCurrentProfile(),
     ]);
   if (!detail) notFound();
@@ -41,6 +43,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
       rodados={rodados}
       stock={stock}
       thresholds={thresholds}
+      oil={oil}
       canDelete={profile?.role === "admin"}
     />
   );

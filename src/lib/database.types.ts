@@ -329,6 +329,66 @@ export type Database = {
           },
         ]
       }
+      oil_changes: {
+        Row: {
+          changed_at: string | null
+          cost: number | null
+          created_at: string
+          created_by: string | null
+          filter_changed: boolean
+          id: string
+          next_km: number | null
+          notes: string | null
+          odometer_km: number
+          oil_spec: string | null
+          vehicle_id: string
+          vendor: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          filter_changed?: boolean
+          id?: string
+          next_km?: number | null
+          notes?: string | null
+          odometer_km: number
+          oil_spec?: string | null
+          vehicle_id: string
+          vendor?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          filter_changed?: boolean
+          id?: string
+          next_km?: number | null
+          notes?: string | null
+          odometer_km?: number
+          oil_spec?: string | null
+          vehicle_id?: string
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oil_changes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oil_changes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           cpf: string
@@ -818,6 +878,7 @@ export type Database = {
           created_by: string | null
           deleted_at: string | null
           id: string
+          maintenance_plan: string | null
           model: string | null
           notes: string | null
           photo_path: string | null
@@ -834,6 +895,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           id?: string
+          maintenance_plan?: string | null
           model?: string | null
           notes?: string | null
           photo_path?: string | null
@@ -850,6 +912,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           id?: string
+          maintenance_plan?: string | null
           model?: string | null
           notes?: string | null
           photo_path?: string | null

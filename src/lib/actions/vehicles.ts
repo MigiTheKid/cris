@@ -39,6 +39,7 @@ export async function saveVehicle(
   const capacity = String(formData.get("capacity") ?? "").trim() || null;
   const companyKind = String(formData.get("companyKind") ?? "") as CompanyKind;
   const status = String(formData.get("status") ?? "ativo") as VehicleStatus;
+  const maintenancePlan = String(formData.get("maintenancePlan") ?? "").trim() || null;
 
   if (plate.length < 7) return { error: "Informe a placa (ex.: ABC-1D23)." };
   if (!VEHICLE_TYPES.includes(vehicleType)) return { error: "Selecione o tipo do veículo." };
@@ -72,6 +73,7 @@ export async function saveVehicle(
     capacity,
     company_id: company.id,
     status,
+    maintenance_plan: maintenancePlan,
   };
 
   if (id) {
