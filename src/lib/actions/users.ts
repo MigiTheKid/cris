@@ -84,12 +84,14 @@ export async function updateUser(_prev: UserFormState, formData: FormData): Prom
   if (gate.error) return { error: gate.error };
 
   const id = String(formData.get("id") ?? "").trim();
+  const cpf = String(formData.get("cpf") ?? "").replace(/\D/g, "");
   const fullName = String(formData.get("fullName") ?? "").trim();
   const role = String(formData.get("role") ?? "") as Role;
   const phone = String(formData.get("phone") ?? "").trim() || null;
   const isActive = formData.get("isActive") === "on";
 
   if (!id) return { error: "Usuário inválido." };
+  if (cpf.length !== 11) return { error: "CPF inválido — informe os 11 dígitos." };
   if (fullName.length < 3) return { error: "Informe o nome completo." };
   if (!ROLES.includes(role)) return { error: "Selecione o cargo." };
 
@@ -99,6 +101,25 @@ export async function updateUser(_prev: UserFormState, formData: FormData): Prom
   }
 
   const admin = createAdminClient();
+
+  // CPF é o login. Se mudou, garante unicidade e atualiza o e-mail de autenticação.
+  const { data: current } = await admin.from("profiles").select("cpf").eq("id", id).maybeSingle();
+  const cpfChanged = current?.cpf !== cpf;
+  if (cpfChanged) {
+    const { data: dup } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("cpf", cpf)
+      .neq("id", id)
+      .maybeSingle();
+    if (dup) return { error: "Já existe outro usuário com este CPF." };
+
+    const { error: authErr } = await admin.auth.admin.updateUserById(id, {
+      email: cpfToEmail(cpf),
+      email_confirm: true,
+    });
+    if (authErr) return { error: `Não foi possível atualizar o login: ${authErr.message}` };
+  }
 
   // Se virou motorista e ainda não tem driver_profile, cria.
   if (role === "driver") {
@@ -112,15 +133,19 @@ export async function updateUser(_prev: UserFormState, formData: FormData): Prom
 
   const { error } = await admin
     .from("profiles")
-    .update({ full_name: fullName, role, phone, is_active: isActive })
+    .update({ cpf, full_name: fullName, role, phone, is_active: isActive })
     .eq("id", id);
-  if (error) return { error: `Não foi possível salvar: ${error.message}` };
+  if (error) {
+    if (error.message.includes("profiles_cpf_key"))
+      return { error: "Já existe outro usuário com este CPF." };
+    return { error: `Não foi possível salvar: ${error.message}` };
+  }
 
   await logAudit({
     action: "update",
     entity: "user",
     entityId: id,
-    detail: { name: fullName, role, isActive },
+    detail: { name: fullName, role, isActive, cpfChanged },
   });
   revalidatePath("/configuracoes");
   revalidatePath("/motoristas");

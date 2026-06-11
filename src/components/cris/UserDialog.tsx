@@ -59,7 +59,7 @@ export function UserDialog({ trigger, initial }: { trigger: ReactElement; initia
           <DialogTitle>{isEdit ? "Editar usuário" : "Novo usuário"}</DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Atualize os dados ou o cargo. O CPF (login) não muda."
+              ? "Atualize os dados, o cargo ou o CPF. Mudar o CPF muda o login da pessoa."
               : "A conta nasce com a senha provisória e troca obrigatória no 1º acesso."}
           </DialogDescription>
         </DialogHeader>
@@ -90,10 +90,9 @@ export function UserDialog({ trigger, initial }: { trigger: ReactElement; initia
                 id="u-cpf"
                 name="cpf"
                 defaultValue={initial?.cpf ?? ""}
-                className={inputCls + (isEdit ? " opacity-60" : "")}
+                className={inputCls + " mono"}
                 placeholder="000.000.000-00"
-                disabled={isEdit}
-                required={!isEdit}
+                required
               />
             </div>
             <div className={field}>
