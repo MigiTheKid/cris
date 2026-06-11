@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentProfile } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 
 export type DriverProfileState = { error?: string; ok?: boolean };
@@ -56,5 +58,49 @@ export async function saveDriverProfile(
   });
   revalidatePath(`/motoristas/${driverId}`);
   revalidatePath("/motoristas");
+  return { ok: true };
+}
+
+/**
+ * Exclui (arquiva) um motorista: desativa o perfil (`is_active=false`) e libera
+ * o veículo atribuído. Reversível pela reativação em Configurações; documentos e
+ * histórico ficam preservados. Admin apenas (mexe em conta de usuário).
+ */
+export async function deleteDriver(id: string): Promise<DriverProfileState> {
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role !== "admin") {
+    return { error: "Apenas administradores podem excluir motoristas." };
+  }
+  if (!id) return { error: "Motorista inválido." };
+  if (id === profile.id) return { error: "Você não pode excluir a própria conta." };
+
+  const admin = createAdminClient();
+  const nowIso = new Date().toISOString();
+
+  // Libera o veículo atribuído (fica sem motorista).
+  await admin
+    .from("vehicle_assignments")
+    .update({ unassigned_at: nowIso })
+    .eq("driver_id", id)
+    .is("unassigned_at", null);
+
+  const { data: prof, error } = await admin
+    .from("profiles")
+    .update({ is_active: false })
+    .eq("id", id)
+    .eq("role", "driver")
+    .select("full_name")
+    .maybeSingle();
+  if (error) return { error: `Não foi possível excluir: ${error.message}` };
+  if (!prof) return { error: "Motorista não encontrado." };
+
+  await logAudit({
+    action: "delete",
+    entity: "user",
+    entityId: id,
+    detail: { name: prof.full_name },
+  });
+  revalidatePath("/motoristas");
+  revalidatePath("/configuracoes");
   return { ok: true };
 }

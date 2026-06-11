@@ -21,6 +21,7 @@ import {
   UserX,
   UserCog,
   Link2,
+  Trash2,
 } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { StatusBadge } from "./StatusBadge";
@@ -30,8 +31,10 @@ import { AssignDriverDialog, type DriverOption } from "./AssignDriverDialog";
 import { CouplingDialog, type TrailerOption } from "./CouplingDialog";
 import { CompositionStrip } from "./CompositionStrip";
 import { DeleteDocButton } from "./DeleteDocButton";
+import { DangerDeleteDialog } from "./DangerDeleteDialog";
 import { PhotoUpload } from "./PhotoUpload";
 import { VehicleTiresTab } from "./VehicleTiresTab";
+import { deleteVehicle } from "@/lib/actions/vehicles";
 import type { VehicleRodado, StockTire } from "@/lib/data/tires";
 import type { TireThresholds } from "@/lib/tires";
 import { saveVehicleDocument } from "@/lib/actions/documents";
@@ -189,6 +192,23 @@ export function VehicleDetailView({
                   <Pencil size={16} /> Editar dados
                 </button>
               }
+            />
+            <DangerDeleteDialog
+              trigger={
+                <button className="cbtn ghost" style={{ color: "var(--crit)" }}>
+                  <Trash2 size={16} /> Excluir
+                </button>
+              }
+              title="Excluir veículo"
+              description={`Excluir o veículo ${detail.plate} da frota? Ele sai das listas e dos alertas; o histórico (auditoria, atribuições, pneus) é preservado e pode ser restaurado.`}
+              confirmWord={detail.plate}
+              consequences={[
+                "Some da Frota, do Painel e dos alertas documentais",
+                "Libera o motorista atribuído e desfaz engates ativos",
+                "Reversível: a exclusão é um arquivamento (não apaga o histórico)",
+              ]}
+              action={() => deleteVehicle(detail.id)}
+              redirectTo="/frota"
             />
           </div>
         </div>

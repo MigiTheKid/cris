@@ -14,14 +14,17 @@ import {
   RefreshCw,
   Plus,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { StatusBadge } from "./StatusBadge";
 import { DocumentDialog, type DocTypeOption } from "./DocumentDialog";
 import { DeleteDocButton } from "./DeleteDocButton";
+import { DangerDeleteDialog } from "./DangerDeleteDialog";
 import { DriverProfileDialog } from "./DriverProfileDialog";
 import { PhotoUpload } from "./PhotoUpload";
 import { saveDriverDocument } from "@/lib/actions/driver-documents";
+import { deleteDriver } from "@/lib/actions/drivers";
 import type { StatusTone } from "@/lib/status";
 import type { DriverDetail, DriverDoc } from "@/lib/data/drivers";
 
@@ -58,9 +61,11 @@ function fmt(d: string | null) {
 export function DriverDetailView({
   driver,
   docTypes,
+  canDelete = false,
 }: {
   driver: DriverDetail;
   docTypes: DocTypeOption[];
+  canDelete?: boolean;
 }) {
   const [tab, setTab] = useState<string>("docs");
   const critDocs = driver.docs.filter((d) => d.tone === "crit").length;
@@ -153,6 +158,25 @@ export function DriverDetailView({
                 </button>
               }
             />
+            {canDelete && (
+              <DangerDeleteDialog
+                trigger={
+                  <button className="cbtn ghost" style={{ color: "var(--crit)" }}>
+                    <Trash2 size={16} /> Excluir
+                  </button>
+                }
+                title="Excluir motorista"
+                description={`Excluir ${driver.name} do sistema? Ele sai das listas e perde o acesso; documentos e histórico ficam preservados e a conta pode ser reativada em Configurações.`}
+                confirmWord={driver.name}
+                consequences={[
+                  "Some da lista de Motoristas e perde o acesso ao sistema",
+                  "Libera o veículo atribuído (fica sem motorista)",
+                  "Reversível: reative a conta em Configurações quando quiser",
+                ]}
+                action={() => deleteDriver(driver.id)}
+                redirectTo="/motoristas"
+              />
+            )}
           </div>
         </div>
       </div>

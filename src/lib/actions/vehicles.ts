@@ -100,3 +100,67 @@ function friendly(msg: string): string {
   if (msg.includes("vehicles_plate_key")) return "Já existe um veículo com essa placa.";
   return `Não foi possível salvar: ${msg}`;
 }
+
+/**
+ * Exclui (arquiva) um veículo: soft delete via `deleted_at`. Reversível e
+ * preserva o histórico. Libera o motorista atribuído e desfaz engates ativos.
+ * Bloqueia se houver pneus instalados (precisam de destino físico primeiro).
+ */
+export async function deleteVehicle(id: string): Promise<VehicleFormState> {
+  if (!id) return { error: "Veículo inválido." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada. Entre novamente." };
+
+  // Pneus instalados precisam de destino (estoque/recapadora/sucata) antes.
+  const { data: tires } = await supabase
+    .from("tire_installations")
+    .select("id")
+    .eq("vehicle_id", id)
+    .is("removed_at", null)
+    .limit(1);
+  if (tires && tires.length > 0) {
+    return {
+      error:
+        "Há pneus instalados neste veículo. Remova-os (com destino) pela aba Pneus antes de excluir.",
+    };
+  }
+
+  const { data: veh } = await supabase
+    .from("vehicles")
+    .select("plate, deleted_at")
+    .eq("id", id)
+    .maybeSingle();
+  if (!veh) return { error: "Veículo não encontrado." };
+  if (veh.deleted_at) return { error: "Este veículo já foi excluído." };
+
+  const nowIso = new Date().toISOString();
+
+  // Libera o motorista atribuído e desfaz engates (como cavalo ou reboque).
+  await supabase
+    .from("vehicle_assignments")
+    .update({ unassigned_at: nowIso })
+    .eq("vehicle_id", id)
+    .is("unassigned_at", null);
+  await supabase
+    .from("vehicle_couplings")
+    .update({ uncoupled_at: nowIso })
+    .or(`tractor_id.eq.${id},trailer_id.eq.${id}`)
+    .is("uncoupled_at", null);
+
+  const { error } = await supabase.from("vehicles").update({ deleted_at: nowIso }).eq("id", id);
+  if (error) return { error: `Não foi possível excluir: ${error.message}` };
+
+  await logAudit({
+    action: "delete",
+    entity: "vehicle",
+    entityId: id,
+    detail: { plate: veh.plate },
+  });
+  revalidatePath("/frota");
+  revalidatePath("/painel");
+  return { ok: true };
+}
