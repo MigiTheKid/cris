@@ -31,6 +31,8 @@ import { CouplingDialog, type TrailerOption } from "./CouplingDialog";
 import { CompositionStrip } from "./CompositionStrip";
 import { DeleteDocButton } from "./DeleteDocButton";
 import { PhotoUpload } from "./PhotoUpload";
+import { VehicleTiresTab } from "./VehicleTiresTab";
+import type { VehicleRodado, StockTire } from "@/lib/data/tires";
 import { saveVehicleDocument } from "@/lib/actions/documents";
 import type { StatusTone } from "@/lib/status";
 import type { VehicleDetail, VehicleDoc } from "@/lib/data/vehicle-detail";
@@ -57,7 +59,6 @@ const DOC_ICON: Record<string, typeof FileText> = {
 
 const SOON_TABS = [
   { id: "oil", label: "Trocas de óleo", icon: Droplet, soon: "M2" },
-  { id: "tires", label: "Pneus", icon: Disc, soon: "M2" },
   { id: "maint", label: "Manutenções", icon: Wrench, soon: "M3" },
   { id: "fuel", label: "Abastecimentos", icon: Fuel, soon: "M3" },
 ] as const;
@@ -74,11 +75,15 @@ export function VehicleDetailView({
   docTypes,
   drivers,
   trailers,
+  rodados,
+  stock,
 }: {
   detail: VehicleDetail;
   docTypes: DocTypeOption[];
   drivers: DriverOption[];
   trailers: TrailerOption[];
+  rodados: VehicleRodado[];
+  stock: StockTire[];
 }) {
   const [tab, setTab] = useState<string>("docs");
   const critDocs = detail.docs.filter((d) => d.tone === "crit").length;
@@ -206,6 +211,12 @@ export function VehicleDetailView({
             {detail.coupledTo && <span className="mini mono">{detail.coupledTo.plate}</span>}
           </button>
         )}
+        <button
+          className={"vd-tab" + (tab === "tires" ? " active" : "")}
+          onClick={() => setTab("tires")}
+        >
+          <Disc size={16} /> Pneus
+        </button>
         {SOON_TABS.map((t) => (
           <button
             key={t.id}
@@ -392,6 +403,8 @@ export function VehicleDetailView({
             )}
           </div>
         )}
+
+        {tab === "tires" && <VehicleTiresTab rodados={rodados} stock={stock} />}
 
         {SOON_TABS.some((t) => t.id === tab) &&
           (() => {

@@ -10,6 +10,7 @@ import {
   Activity,
   Link2,
   Unlink,
+  Disc,
 } from "lucide-react";
 import type { AuditEntry } from "@/lib/data/audit";
 
@@ -23,6 +24,8 @@ const ACTION: Record<string, ActionMeta> = {
   unassign: { verb: "liberou", icon: UserX, dot: "idle" },
   couple: { verb: "engatou", icon: Link2, dot: "ok" },
   uncouple: { verb: "desengatou", icon: Unlink, dot: "idle" },
+  install: { verb: "instalou", icon: Disc, dot: "ok" },
+  remove: { verb: "removeu", icon: Disc, dot: "idle" },
   reset_password: { verb: "redefiniu a senha de", icon: KeyRound, dot: "warn" },
   toggle: { verb: "alterou", icon: Power, dot: "warn" },
   password_change: { verb: "trocou a própria senha", icon: ShieldCheck, dot: "ok" },
@@ -34,6 +37,7 @@ const ENTITY: Record<string, string> = {
   driver_document: "documento de motorista",
   assignment: "motorista do veículo",
   coupling: "reboque do cavalo",
+  tire: "pneu",
   document_type: "tipo de documento",
   user: "usuário",
   company: "empresa",
@@ -56,6 +60,9 @@ function tail(entry: AuditEntry): string {
   if (typeof d.legalName === "string") parts.push(d.legalName);
   if (typeof d.label === "string") parts.push(d.label);
   if (typeof d.docType === "string") parts.push(d.docType);
+  if (typeof d.fogo === "string") parts.push(`fogo ${d.fogo}`);
+  if (typeof d.position === "string") parts.push(`(${d.position})`);
+  if (typeof d.destination === "string") parts.push(`→ ${d.destination}`);
   if (entry.action === "toggle" && typeof d.isActive === "boolean")
     parts.push(d.isActive ? "(ativado)" : "(desativado)");
   if (entry.action === "update" && entry.entity === "user" && typeof d.isActive === "boolean")

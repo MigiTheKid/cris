@@ -12,6 +12,36 @@ Estado do projeto para retomar a qualquer momento.
   - Admin: CPF `000.000.000-00` / senha `mudar123` (Gabriel Krull) → /painel
   - Motorista: CPF `000.000.001-01` / senha `mudar123` (Daurio) → /motorista
 
+## ✅ M2 PNEUS — Fase 1 (11/06) — O DIFERENCIAL
+
+Conceito aprovado pelo Miguel (pedido do Fermino): pesquisa de mercado (Prolog,
+Fleetio/RTA, CONTRAN/recapagem) + material interno (planilha nº de fogo 94–174,
+ficha JRM com diagrama). Tese: "o pneu é um patrimônio que viaja".
+
+- **Migration `20260611120000_tires.sql`**: tires (nº de fogo único, vida,
+  sulco novo, status em_uso/estoque/recapagem/conserto/sucateado/vendido),
+  vehicle_axles (layout por veículo: nº, tipo, duplo), tire_installations
+  (vínculo temporal pneu×veículo×posição eixo+lado+dual com km; índices únicos
+  nos 2 lados — posição "U" via coalesce p/ singles), tire_readings (sulco/
+  pressão/km), tire_events (recapagem/conserto/sucata/venda c/ custo). RLS
+  staff + motorista lê rodado do próprio veículo.
+- **Helpers** `src/lib/tires.ts`: limiares (≥5 ok / 3–5 recape / <3 retirar),
+  positionCode/Label (1E, 2DE…), AXLE_PRESETS por tipo (cavalo 6x2, truck,
+  toco, bitruck, semirreboque 3 eixos…).
+- **Actions**: saveTire, saveAxleLayout (bloqueia se pneu instalado), installTire,
+  removeTire (destino), recordReading (sem audit — rotina), recapReturn (vida+1).
+- **UI**: item **Pneus** na sidebar; página `/pneus` (KPIs, estoque por medida
+  como a planilha, tabela com sulco colorido e onde está); aba **Pneus** no
+  veículo: `TireDiagram` (SVG gerado do layout, conjunto cavalo+reboque com
+  engate, pneu colorido por sulco, nº de fogo dentro) + painel da posição
+  (instalar do estoque / aferir / remover) + `AxleLayoutDialog` com preset.
+- **Verificado no browser ponta a ponta**: cadastro → estoque → preset cavalo →
+  diagrama 8 posições → instalou fogo 123 na 1E (km 291.618) → aferiu 4,2 mm →
+  pneu ficou ÂMBAR "Janela de recape" → /pneus mostra "RAA-9I02 · 1E". Dados de
+  teste limpos (layout de eixos do RAA mantido).
+- FASE 2 (próx.): rodízio guiado, recapagem com custo na UI, linha da vida.
+  FASE 3: CPK por marca, projeções. Gabriel pode importar a planilha (fogo/medida).
+
 ## ✅ Composição cavalo ⇄ reboque (11/06)
 
 - **Modelo**: "o motorista é do cavalo, o reboque segue o cavalo" — conjunto é

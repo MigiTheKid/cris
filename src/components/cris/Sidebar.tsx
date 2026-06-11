@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, Truck, Users, BarChart3, Settings, LogOut } from "lucide-react";
+import { Home, Truck, Users, Disc, BarChart3, Settings, LogOut } from "lucide-react";
 import { CrisMark } from "./CrisMark";
 import { Avatar } from "./Avatar";
 import { signOut } from "@/lib/actions/auth";
@@ -12,6 +12,7 @@ const NAV = [
   { href: "/painel", label: "Hoje", icon: Home },
   { href: "/frota", label: "Frota", icon: Truck },
   { href: "/motoristas", label: "Motoristas", icon: Users },
+  { href: "/pneus", label: "Pneus", icon: Disc },
   { href: "/indicadores", label: "Indicadores", icon: BarChart3 },
 ] as const;
 

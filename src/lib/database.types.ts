@@ -356,6 +356,234 @@ export type Database = {
           },
         ]
       }
+      tire_events: {
+        Row: {
+          cost: number | null
+          created_at: string
+          created_by: string | null
+          event_date: string
+          event_type: Database["public"]["Enums"]["tire_event_type"]
+          id: string
+          new_tread_mm: number | null
+          notes: string | null
+          tire_id: string
+          vendor: string | null
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          event_date?: string
+          event_type: Database["public"]["Enums"]["tire_event_type"]
+          id?: string
+          new_tread_mm?: number | null
+          notes?: string | null
+          tire_id: string
+          vendor?: string | null
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          event_date?: string
+          event_type?: Database["public"]["Enums"]["tire_event_type"]
+          id?: string
+          new_tread_mm?: number | null
+          notes?: string | null
+          tire_id?: string
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tire_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tire_events_tire_id_fkey"
+            columns: ["tire_id"]
+            isOneToOne: false
+            referencedRelation: "tires"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tire_installations: {
+        Row: {
+          axle_number: number
+          created_by: string | null
+          dual_pos: string | null
+          id: string
+          installed_at: string
+          installed_km: number | null
+          removed_at: string | null
+          removed_km: number | null
+          side: string
+          tire_id: string
+          vehicle_id: string
+        }
+        Insert: {
+          axle_number: number
+          created_by?: string | null
+          dual_pos?: string | null
+          id?: string
+          installed_at?: string
+          installed_km?: number | null
+          removed_at?: string | null
+          removed_km?: number | null
+          side: string
+          tire_id: string
+          vehicle_id: string
+        }
+        Update: {
+          axle_number?: number
+          created_by?: string | null
+          dual_pos?: string | null
+          id?: string
+          installed_at?: string
+          installed_km?: number | null
+          removed_at?: string | null
+          removed_km?: number | null
+          side?: string
+          tire_id?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tire_installations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tire_installations_tire_id_fkey"
+            columns: ["tire_id"]
+            isOneToOne: false
+            referencedRelation: "tires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tire_installations_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tire_readings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          measured_at: string
+          pressure_psi: number | null
+          tire_id: string
+          tread_mm: number
+          vehicle_km: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          measured_at?: string
+          pressure_psi?: number | null
+          tire_id: string
+          tread_mm: number
+          vehicle_km?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          measured_at?: string
+          pressure_psi?: number | null
+          tire_id?: string
+          tread_mm?: number
+          vehicle_km?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tire_readings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tire_readings_tire_id_fkey"
+            columns: ["tire_id"]
+            isOneToOne: false
+            referencedRelation: "tires"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tires: {
+        Row: {
+          brand: string | null
+          created_at: string
+          created_by: string | null
+          current_life: number
+          deleted_at: string | null
+          fire_number: string
+          id: string
+          model: string | null
+          notes: string | null
+          purchase_date: string | null
+          purchase_value: number | null
+          size: string
+          status: Database["public"]["Enums"]["tire_status"]
+          tread_new_mm: number | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_life?: number
+          deleted_at?: string | null
+          fire_number: string
+          id?: string
+          model?: string | null
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_value?: number | null
+          size: string
+          status?: Database["public"]["Enums"]["tire_status"]
+          tread_new_mm?: number | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_life?: number
+          deleted_at?: string | null
+          fire_number?: string
+          id?: string
+          model?: string | null
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_value?: number | null
+          size?: string
+          status?: Database["public"]["Enums"]["tire_status"]
+          tread_new_mm?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tires_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_assignments: {
         Row: {
           assigned_at: string
@@ -398,6 +626,38 @@ export type Database = {
           },
           {
             foreignKeyName: "vehicle_assignments_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_axles: {
+        Row: {
+          axle_number: number
+          dual: boolean
+          id: string
+          kind: Database["public"]["Enums"]["axle_kind"]
+          vehicle_id: string
+        }
+        Insert: {
+          axle_number: number
+          dual?: boolean
+          id?: string
+          kind: Database["public"]["Enums"]["axle_kind"]
+          vehicle_id: string
+        }
+        Update: {
+          axle_number?: number
+          dual?: boolean
+          id?: string
+          kind?: Database["public"]["Enums"]["axle_kind"]
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_axles_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
@@ -612,6 +872,13 @@ export type Database = {
       my_current_vehicle: { Args: never; Returns: string }
     }
     Enums: {
+      axle_kind:
+        | "direcional"
+        | "tracao"
+        | "truck"
+        | "arrastado"
+        | "reboque"
+        | "outro"
       company_doc_type:
         | "alvara"
         | "cert_regularidade"
@@ -620,6 +887,14 @@ export type Database = {
         | "outro"
       company_kind: "top_diesel" | "posto_planeta"
       driver_doc_type: "cnh" | "mopp" | "toxicologico" | "aso" | "outro"
+      tire_event_type: "recapagem" | "conserto" | "sucateamento" | "venda"
+      tire_status:
+        | "em_uso"
+        | "estoque"
+        | "recapagem"
+        | "conserto"
+        | "sucateado"
+        | "vendido"
       user_role: "admin" | "manager" | "driver"
       vehicle_doc_type:
         | "crlv"
@@ -769,6 +1044,14 @@ export const Constants = {
   },
   public: {
     Enums: {
+      axle_kind: [
+        "direcional",
+        "tracao",
+        "truck",
+        "arrastado",
+        "reboque",
+        "outro",
+      ],
       company_doc_type: [
         "alvara",
         "cert_regularidade",
@@ -778,6 +1061,15 @@ export const Constants = {
       ],
       company_kind: ["top_diesel", "posto_planeta"],
       driver_doc_type: ["cnh", "mopp", "toxicologico", "aso", "outro"],
+      tire_event_type: ["recapagem", "conserto", "sucateamento", "venda"],
+      tire_status: [
+        "em_uso",
+        "estoque",
+        "recapagem",
+        "conserto",
+        "sucateado",
+        "vendido",
+      ],
       user_role: ["admin", "manager", "driver"],
       vehicle_doc_type: [
         "crlv",
