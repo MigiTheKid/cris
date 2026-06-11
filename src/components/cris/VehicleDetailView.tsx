@@ -151,7 +151,14 @@ export function VehicleDetailView({
             </div>
             <div>
               <div className="k">Motorista</div>
-              <div className="v">{detail.driverName ?? "—"}</div>
+              <div className="v">
+                {detail.effectiveDriverName ?? "—"}
+                {detail.driverViaPlate && (
+                  <span className="mono ml-1 text-[11px] text-[var(--text-3)]">
+                    (cavalo {detail.driverViaPlate})
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <div className="vd-cta">
@@ -274,7 +281,57 @@ export function VehicleDetailView({
           </div>
         )}
 
-        {tab === "driver" && (
+        {tab === "driver" && isTrailerUnit && (
+          <div>
+            <div className="vd-driver-head">
+              {detail.coupledTo?.driverId ? (
+                <Link
+                  href={`/motoristas/${detail.coupledTo.driverId}`}
+                  className="vd-driver-card link"
+                >
+                  <Avatar name={detail.coupledTo.driverName ?? "?"} size={54} hue={206} />
+                  <div className="dc-main">
+                    <div className="dc-name">{detail.coupledTo.driverName}</div>
+                    <div className="dc-sub">
+                      Motorista do cavalo <span className="mono">{detail.coupledTo.plate}</span> ·
+                      ver ficha
+                    </div>
+                  </div>
+                </Link>
+              ) : detail.coupledTo ? (
+                <div className="vd-driver-card empty">
+                  <span className="dc-empty-ico">
+                    <UserX size={26} />
+                  </span>
+                  <div className="dc-main">
+                    <div className="dc-name">Sem motorista</div>
+                    <div className="dc-sub">
+                      O cavalo <span className="mono">{detail.coupledTo.plate}</span> não tem
+                      condutor atribuído
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="vd-driver-card empty">
+                  <span className="dc-empty-ico">
+                    <Link2 size={26} />
+                  </span>
+                  <div className="dc-main">
+                    <div className="dc-name">Reboque livre</div>
+                    <div className="dc-sub">
+                      Engate a um cavalo (aba Composição) para herdar o motorista
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <p className="mt-3 text-xs text-[var(--text-3)]">
+              Reboques não recebem motorista direto — o condutor do conjunto é o do cavalo engatado.
+            </p>
+          </div>
+        )}
+
+        {tab === "driver" && !isTrailerUnit && (
           <div>
             <div className="vd-driver-head">
               {detail.driverId ? (

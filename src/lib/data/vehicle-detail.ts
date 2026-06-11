@@ -33,6 +33,7 @@ export type CompositionUnit = {
   tone: StatusTone;
   statusLabel: string;
   driverName: string | null; // só preenchido quando a outra metade é o cavalo
+  driverId: string | null; // idem — id do motorista do cavalo (link para a ficha)
 };
 
 export type CouplingHistory = {
@@ -57,6 +58,10 @@ export type VehicleDetail = {
   statusLabel: string;
   driverId: string | null;
   driverName: string | null;
+  /** Motorista efetivo: o próprio, ou o do cavalo engatado (reboque herda). */
+  effectiveDriverName: string | null;
+  /** Placa do cavalo quando o motorista é herdado (reboque); null se for próprio. */
+  driverViaPlate: string | null;
   docsOkCount: number;
   docs: VehicleDoc[];
   history: AssignmentHistory[];
@@ -186,6 +191,7 @@ export async function getVehicleDetail(id: string): Promise<VehicleDetail | null
       if (other) {
         // Se a outra metade é o cavalo, o motorista do conjunto vem dele.
         let otherDriver: string | null = null;
+        let otherDriverId: string | null = null;
         if (isTrailer) {
           const { data: tAssign } = await db
             .from("vehicle_assignments")
@@ -194,6 +200,7 @@ export async function getVehicleDetail(id: string): Promise<VehicleDetail | null
             .is("unassigned_at", null)
             .maybeSingle();
           if (tAssign?.driver_id) {
+            otherDriverId = tAssign.driver_id;
             const { data: prof } = await db
               .from("profiles")
               .select("full_name")
@@ -210,10 +217,15 @@ export async function getVehicleDetail(id: string): Promise<VehicleDetail | null
           tone: st.tone,
           statusLabel: st.label,
           driverName: otherDriver,
+          driverId: otherDriverId,
         };
       }
     }
   }
+
+  const ownDriverName = current ? (nameById.get(current.driver_id) ?? null) : null;
+  // Reboque sem motorista próprio herda o do cavalo engatado.
+  const inheritedDriverName = isTrailer && !ownDriverName ? (coupledTo?.driverName ?? null) : null;
 
   return {
     id: v.id,
@@ -230,7 +242,9 @@ export async function getVehicleDetail(id: string): Promise<VehicleDetail | null
     tone: worstTone,
     statusLabel,
     driverId: current?.driver_id ?? null,
-    driverName: current ? (nameById.get(current.driver_id) ?? null) : null,
+    driverName: ownDriverName,
+    effectiveDriverName: ownDriverName ?? inheritedDriverName,
+    driverViaPlate: inheritedDriverName ? (coupledTo?.plate ?? null) : null,
     docsOkCount: docs.filter((d) => d.tone === "ok").length,
     docs,
     history,

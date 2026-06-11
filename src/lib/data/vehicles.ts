@@ -9,6 +9,8 @@ export type VehicleListItem = {
   vehicleType: Database["public"]["Enums"]["vehicle_type"];
   companyKind: Database["public"]["Enums"]["company_kind"];
   driverName: string | null;
+  /** Quando o motorista é herdado do cavalo engatado: a placa do cavalo. */
+  driverViaPlate: string | null;
   status: ExpiryStatus;
   /** Placa da outra metade da composição (reboque do cavalo / cavalo do reboque). */
   coupledPlate: string | null;
@@ -55,9 +57,19 @@ export async function getVehicleList(): Promise<VehicleListItem[]> {
     for (const p of profiles ?? []) names.set(p.id, p.full_name);
   }
 
-  // Engates ativos → placa da outra metade, nos dois sentidos.
+  // Motorista próprio (atribuição ativa) por veículo — base para herança.
+  const ownDriverIdById = new Map<string, string>();
+  for (const v of rows) {
+    const id = v.assignments?.find((a) => a.unassigned_at === null)?.driver_id;
+    if (id) ownDriverIdById.set(v.id, id);
+  }
+
+  // Engates ativos → placa da outra metade (dois sentidos) + motorista herdado
+  // pelo reboque (vem do cavalo do conjunto).
   const plateById = new Map(rows.map((v) => [v.id, v.plate]));
   const coupledPlateById = new Map<string, string>();
+  const inheritedDriverIdByTrailer = new Map<string, string>();
+  const inheritedFromPlateByTrailer = new Map<string, string>();
   const { data: couplings } = await db
     .from("vehicle_couplings")
     .select("tractor_id, trailer_id")
@@ -67,10 +79,24 @@ export async function getVehicleList(): Promise<VehicleListItem[]> {
     const trailerPlate = plateById.get(c.trailer_id);
     if (trailerPlate) coupledPlateById.set(c.tractor_id, trailerPlate);
     if (tractorPlate) coupledPlateById.set(c.trailer_id, tractorPlate);
+    const tractorDriverId = ownDriverIdById.get(c.tractor_id);
+    if (tractorDriverId) inheritedDriverIdByTrailer.set(c.trailer_id, tractorDriverId);
+    if (tractorPlate) inheritedFromPlateByTrailer.set(c.trailer_id, tractorPlate);
   }
 
   return rows.map((v) => {
-    const activeDriverId = v.assignments?.find((a) => a.unassigned_at === null)?.driver_id ?? null;
+    const isTrailer = v.vehicle_type === "semi_reboque" || v.vehicle_type === "reboque";
+    const activeDriverId = ownDriverIdById.get(v.id) ?? null;
+    let driverName = activeDriverId ? (names.get(activeDriverId) ?? null) : null;
+    let driverViaPlate: string | null = null;
+    // Reboque sem motorista próprio herda o do cavalo engatado.
+    if (!driverName && isTrailer) {
+      const inhId = inheritedDriverIdByTrailer.get(v.id);
+      if (inhId) {
+        driverName = names.get(inhId) ?? null;
+        driverViaPlate = inheritedFromPlateByTrailer.get(v.id) ?? null;
+      }
+    }
     const docStatuses = (v.documents ?? [])
       .filter((d) => !d.deleted_at)
       .map((d) => expiryStatus(d.expires_at ? new Date(d.expires_at) : null));
@@ -80,7 +106,8 @@ export async function getVehicleList(): Promise<VehicleListItem[]> {
       model: v.model,
       vehicleType: v.vehicle_type,
       companyKind: v.company?.kind ?? "top_diesel",
-      driverName: activeDriverId ? (names.get(activeDriverId) ?? null) : null,
+      driverName,
+      driverViaPlate,
       status: worstExpiryStatus(docStatuses),
       coupledPlate: coupledPlateById.get(v.id) ?? null,
     };

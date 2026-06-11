@@ -97,7 +97,14 @@ export default async function FrotaPage() {
                     {v.driverName ? (
                       <span className="inline-flex items-center gap-2">
                         <Avatar name={v.driverName} size={28} />
-                        <span className="text-[var(--text)]">{v.driverName}</span>
+                        <span className="flex flex-col leading-tight">
+                          <span className="text-[var(--text)]">{v.driverName}</span>
+                          {v.driverViaPlate && (
+                            <span className="mono text-[11px] text-[var(--text-3)]">
+                              via cavalo {v.driverViaPlate}
+                            </span>
+                          )}
+                        </span>
                       </span>
                     ) : (
                       <span className="text-[var(--text-3)]">—</span>
