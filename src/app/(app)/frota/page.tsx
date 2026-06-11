@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText, Plus, ChevronRight, Truck } from "lucide-react";
+import { FileText, Plus, ChevronRight, Truck, Link2 as LinkIcon } from "lucide-react";
 import { getVehicleList } from "@/lib/data/vehicles";
 import { vehicleTypeLabel, companyLabel } from "@/lib/labels";
 import { statusTone } from "@/lib/status";
@@ -62,9 +62,23 @@ export default async function FrotaPage() {
                   className="group border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--hover)]"
                 >
                   <td className="px-5 py-3.5">
-                    <Link href={`/frota/${v.id}`} className="plate-chip">
-                      {v.plate}
-                    </Link>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Link href={`/frota/${v.id}`} className="plate-chip">
+                        {v.plate}
+                      </Link>
+                      {v.coupledPlate && (
+                        <span
+                          className="comp-chip mono"
+                          title={
+                            v.vehicleType === "cavalo"
+                              ? `Reboque engatado: ${v.coupledPlate}`
+                              : `Engatado no cavalo ${v.coupledPlate}`
+                          }
+                        >
+                          <LinkIcon size={11} /> {v.coupledPlate}
+                        </span>
+                      )}
+                    </span>
                   </td>
                   <td className="px-5 py-3.5 font-semibold text-[var(--text)]">
                     <Link href={`/frota/${v.id}`} className="hover:text-[var(--brand-amber)]">

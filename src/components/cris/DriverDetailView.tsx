@@ -116,8 +116,14 @@ export function DriverDetailView({
               </div>
             </div>
             <div>
-              <div className="k">Veículo atual</div>
-              <div className="v mono">{driver.vehiclePlate ?? "—"}</div>
+              <div className="k">{driver.trailerPlate ? "Conjunto atual" : "Veículo atual"}</div>
+              <div className="v mono">
+                {driver.vehiclePlate
+                  ? driver.trailerPlate
+                    ? `${driver.vehiclePlate} ⫘ ${driver.trailerPlate}`
+                    : driver.vehiclePlate
+                  : "—"}
+              </div>
             </div>
           </div>
           <div className="vd-cta">

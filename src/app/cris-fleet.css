@@ -516,3 +516,135 @@
   opacity: 0.6;
   cursor: default;
 }
+
+/* ============================================================
+   Composição (cavalo ⇄ reboque)
+   ============================================================ */
+.comp-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.comp-head .comp-strip {
+  flex: 1;
+  min-width: 320px;
+}
+.comp-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+.comp-unit {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: var(--panel-solid);
+  border: 1px solid var(--border);
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.18s;
+}
+.comp-unit.link:hover {
+  border-color: var(--brand-amber);
+}
+.comp-unit.current {
+  border-color: color-mix(in oklab, var(--brand-teal) 45%, transparent);
+  box-shadow: 0 14px 36px -26px rgba(7, 80, 86, 0.5);
+}
+.comp-unit.empty {
+  border-style: dashed;
+  opacity: 0.75;
+}
+.comp-ico {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--brand-teal) 10%, transparent);
+  color: var(--brand-teal);
+  flex-shrink: 0;
+}
+.comp-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.comp-plate {
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.04em;
+}
+.comp-model {
+  font-size: 12px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.comp-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 14px;
+  color: var(--text-3);
+  position: relative;
+  flex-shrink: 0;
+}
+.comp-link::before,
+.comp-link::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  border-top: 2px dashed var(--border-strong);
+}
+.comp-link::before {
+  left: 0;
+}
+.comp-link::after {
+  right: 0;
+}
+.comp-link.on {
+  color: var(--brand-amber);
+}
+.comp-link.on::before,
+.comp-link.on::after {
+  border-top-style: solid;
+  border-color: var(--brand-amber);
+}
+.comp-link-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.comp-driver {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.comp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  background: var(--panel-solid);
+  vertical-align: middle;
+}

@@ -18,6 +18,7 @@ const PASSWORD = "mudar123";
 
 const CPF_A = "00000000101"; // Daurio
 const CPF_B = "00000000102"; // Dionatan
+const CPF_CAVALO = "00000000107"; // Maicon — atribuído a um cavalo (RAA-9I02)
 
 const noPersist = { auth: { persistSession: false, autoRefreshToken: false } };
 const admin = createClient(URL, SERVICE, noPersist);
@@ -172,5 +173,61 @@ describe.skipIf(!ready)("RLS — isolamento do motorista", () => {
     const { data, error } = await asDriverA.from("companies").select("id");
     expect(error).toBeNull();
     expect((data ?? []).length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe.skipIf(!ready)("RLS — engate (vehicle_couplings)", () => {
+  let createdCouplingId: string | null = null;
+  let tractorId = "";
+  let asMaicon: SupabaseClient;
+
+  beforeAll(async () => {
+    const maiconId = await profileIdByCpf(CPF_CAVALO);
+    tractorId = await activeVehicle(maiconId); // RAA-9I02 (cavalo)
+
+    // Garante um engate ativo no cavalo do Maicon (cria se faltar).
+    const { data: active } = await admin
+      .from("vehicle_couplings")
+      .select("id")
+      .eq("tractor_id", tractorId)
+      .is("uncoupled_at", null)
+      .maybeSingle();
+    if (!active) {
+      const { data: trailer } = await admin
+        .from("vehicles")
+        .select("id")
+        .in("vehicle_type", ["semi_reboque", "reboque"])
+        .limit(1)
+        .single();
+      const { data: created, error } = await admin
+        .from("vehicle_couplings")
+        .insert({ tractor_id: tractorId, trailer_id: trailer!.id })
+        .select("id")
+        .single();
+      if (error) throw new Error(`engate de teste: ${error.message}`);
+      createdCouplingId = created!.id;
+    }
+
+    asMaicon = await signInDriver(CPF_CAVALO);
+  });
+
+  afterAll(async () => {
+    if (createdCouplingId)
+      await admin.from("vehicle_couplings").delete().eq("id", createdCouplingId);
+    await asMaicon?.auth.signOut();
+  });
+
+  it("motorista do cavalo LÊ o engate do próprio veículo", async () => {
+    const { data, error } = await asMaicon.from("vehicle_couplings").select("tractor_id");
+    expect(error).toBeNull();
+    expect((data ?? []).length).toBeGreaterThanOrEqual(1);
+    for (const row of data ?? []) expect(row.tractor_id).toBe(tractorId);
+  });
+
+  it("outro motorista NÃO lê engate alheio", async () => {
+    const other = await signInDriver(CPF_A); // Daurio — veículo é truck, sem engate
+    const { data } = await other.from("vehicle_couplings").select("id");
+    expect(data ?? []).toHaveLength(0);
+    await other.auth.signOut();
   });
 });

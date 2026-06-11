@@ -47,6 +47,8 @@ export type DriverDetail = {
   hiredAt: string | null;
   vehiclePlate: string | null;
   vehicleId: string | null;
+  /** Reboque engatado no veículo atual (composição completa do condutor). */
+  trailerPlate: string | null;
   tone: StatusTone;
   statusLabel: string;
   docsOkCount: number;
@@ -158,6 +160,7 @@ export async function getDriverDetail(id: string): Promise<DriverDetail | null> 
     .is("unassigned_at", null)
     .maybeSingle();
   let vehiclePlate: string | null = null;
+  let trailerPlate: string | null = null;
   if (assign?.vehicle_id) {
     const { data: v } = await db
       .from("vehicles")
@@ -165,6 +168,15 @@ export async function getDriverDetail(id: string): Promise<DriverDetail | null> 
       .eq("id", assign.vehicle_id)
       .maybeSingle();
     vehiclePlate = v?.plate ?? null;
+
+    // Composição: reboque engatado no veículo do motorista (se houver).
+    const { data: coupling } = await db
+      .from("vehicle_couplings")
+      .select("trailer:vehicles!vehicle_couplings_trailer_id_fkey(plate)")
+      .eq("tractor_id", assign.vehicle_id)
+      .is("uncoupled_at", null)
+      .maybeSingle();
+    trailerPlate = coupling?.trailer?.plate ?? null;
   }
 
   return {
@@ -178,6 +190,7 @@ export async function getDriverDetail(id: string): Promise<DriverDetail | null> 
     hiredAt: p.driver_profiles?.hired_at ?? null,
     vehiclePlate,
     vehicleId: assign?.vehicle_id ?? null,
+    trailerPlate,
     tone,
     statusLabel: statusTone(
       worstExpiryStatus(docs.map((d) => expiryStatus(d.expiresAt ? new Date(d.expiresAt) : null))),

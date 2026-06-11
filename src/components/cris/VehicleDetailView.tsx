@@ -20,12 +20,15 @@ import {
   CalendarDays,
   UserX,
   UserCog,
+  Link2,
 } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { StatusBadge } from "./StatusBadge";
 import { DocumentDialog, type DocTypeOption } from "./DocumentDialog";
 import { VehicleDialog } from "./VehicleDialog";
 import { AssignDriverDialog, type DriverOption } from "./AssignDriverDialog";
+import { CouplingDialog, type TrailerOption } from "./CouplingDialog";
+import { CompositionStrip } from "./CompositionStrip";
 import { DeleteDocButton } from "./DeleteDocButton";
 import { PhotoUpload } from "./PhotoUpload";
 import { saveVehicleDocument } from "@/lib/actions/documents";
@@ -70,13 +73,18 @@ export function VehicleDetailView({
   detail,
   docTypes,
   drivers,
+  trailers,
 }: {
   detail: VehicleDetail;
   docTypes: DocTypeOption[];
   drivers: DriverOption[];
+  trailers: TrailerOption[];
 }) {
   const [tab, setTab] = useState<string>("docs");
   const critDocs = detail.docs.filter((d) => d.tone === "crit").length;
+  const isTractor = detail.vehicleType === "cavalo";
+  const isTrailerUnit = detail.vehicleType === "semi_reboque" || detail.vehicleType === "reboque";
+  const isComposable = isTractor || isTrailerUnit;
 
   return (
     <div>
@@ -189,6 +197,15 @@ export function VehicleDetailView({
         >
           <User size={16} /> Motorista
         </button>
+        {isComposable && (
+          <button
+            className={"vd-tab" + (tab === "comp" ? " active" : "")}
+            onClick={() => setTab("comp")}
+          >
+            <Link2 size={16} /> Composição
+            {detail.coupledTo && <span className="mini mono">{detail.coupledTo.plate}</span>}
+          </button>
+        )}
         {SOON_TABS.map((t) => (
           <button
             key={t.id}
@@ -293,6 +310,85 @@ export function VehicleDetailView({
               ))
             ) : (
               <div className="vd-hist">Nenhuma atribuição registrada.</div>
+            )}
+          </div>
+        )}
+
+        {tab === "comp" && isComposable && (
+          <div>
+            <div className="comp-head">
+              <CompositionStrip
+                tractor={
+                  isTractor
+                    ? {
+                        id: null,
+                        plate: detail.plate,
+                        model: detail.model,
+                        tone: detail.tone,
+                        statusLabel: detail.statusLabel,
+                      }
+                    : detail.coupledTo && {
+                        id: detail.coupledTo.id,
+                        plate: detail.coupledTo.plate,
+                        model: detail.coupledTo.model,
+                        tone: detail.coupledTo.tone,
+                        statusLabel: detail.coupledTo.statusLabel,
+                      }
+                }
+                trailer={
+                  isTractor
+                    ? detail.coupledTo && {
+                        id: detail.coupledTo.id,
+                        plate: detail.coupledTo.plate,
+                        model: detail.coupledTo.model,
+                        tone: detail.coupledTo.tone,
+                        statusLabel: detail.coupledTo.statusLabel,
+                      }
+                    : {
+                        id: null,
+                        plate: detail.plate,
+                        model: detail.model,
+                        tone: detail.tone,
+                        statusLabel: detail.statusLabel,
+                      }
+                }
+                driverName={isTractor ? detail.driverName : (detail.coupledTo?.driverName ?? null)}
+              />
+              {isTractor && (
+                <CouplingDialog
+                  tractorId={detail.id}
+                  plate={detail.plate}
+                  currentTrailerId={detail.coupledTo?.id ?? null}
+                  trailers={trailers}
+                  trigger={
+                    <button className="cbtn primary" style={{ height: 40 }}>
+                      <Link2 size={16} /> {detail.coupledTo ? "Trocar reboque" : "Engatar"}
+                    </button>
+                  }
+                />
+              )}
+            </div>
+            {isTrailerUnit && (
+              <p className="mt-3 text-xs text-[var(--text-3)]">
+                O engate é feito pela página do cavalo.
+              </p>
+            )}
+
+            <div className="eyebrow" style={{ margin: "26px 0 12px" }}>
+              Histórico de engates
+            </div>
+            {detail.couplingHistory.length > 0 ? (
+              detail.couplingHistory.map((h, i) => (
+                <div key={i} className="vd-hist">
+                  <Link2 size={16} /> <span className="mono">{h.plate}</span> — desde{" "}
+                  {new Date(h.coupledAt).toLocaleDateString("pt-BR")}
+                  {h.uncoupledAt
+                    ? ` até ${new Date(h.uncoupledAt).toLocaleDateString("pt-BR")}`
+                    : " (atual)"}
+                </div>
+              ))
+            ) : (
+              <div className="vd-hist">Nenhum engate registrado.</div>
             )}
           </div>
         )}

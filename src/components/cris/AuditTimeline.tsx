@@ -8,6 +8,8 @@ import {
   Power,
   ShieldCheck,
   Activity,
+  Link2,
+  Unlink,
 } from "lucide-react";
 import type { AuditEntry } from "@/lib/data/audit";
 
@@ -19,6 +21,8 @@ const ACTION: Record<string, ActionMeta> = {
   delete: { verb: "removeu", icon: Trash2, dot: "crit" },
   assign: { verb: "atribuiu", icon: UserCog, dot: "ok" },
   unassign: { verb: "liberou", icon: UserX, dot: "idle" },
+  couple: { verb: "engatou", icon: Link2, dot: "ok" },
+  uncouple: { verb: "desengatou", icon: Unlink, dot: "idle" },
   reset_password: { verb: "redefiniu a senha de", icon: KeyRound, dot: "warn" },
   toggle: { verb: "alterou", icon: Power, dot: "warn" },
   password_change: { verb: "trocou a própria senha", icon: ShieldCheck, dot: "ok" },
@@ -29,6 +33,7 @@ const ENTITY: Record<string, string> = {
   vehicle_document: "documento de veículo",
   driver_document: "documento de motorista",
   assignment: "motorista do veículo",
+  coupling: "reboque do cavalo",
   document_type: "tipo de documento",
   user: "usuário",
   company: "empresa",

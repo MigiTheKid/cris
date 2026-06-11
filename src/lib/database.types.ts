@@ -405,6 +405,55 @@ export type Database = {
           },
         ]
       }
+      vehicle_couplings: {
+        Row: {
+          coupled_at: string
+          created_by: string | null
+          id: string
+          tractor_id: string
+          trailer_id: string
+          uncoupled_at: string | null
+        }
+        Insert: {
+          coupled_at?: string
+          created_by?: string | null
+          id?: string
+          tractor_id: string
+          trailer_id: string
+          uncoupled_at?: string | null
+        }
+        Update: {
+          coupled_at?: string
+          created_by?: string | null
+          id?: string
+          tractor_id?: string
+          trailer_id?: string
+          uncoupled_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_couplings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_couplings_tractor_id_fkey"
+            columns: ["tractor_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_couplings_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_documents: {
         Row: {
           created_at: string

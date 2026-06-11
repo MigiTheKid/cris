@@ -10,6 +10,8 @@ export type VehicleListItem = {
   companyKind: Database["public"]["Enums"]["company_kind"];
   driverName: string | null;
   status: ExpiryStatus;
+  /** Placa da outra metade da composição (reboque do cavalo / cavalo do reboque). */
+  coupledPlate: string | null;
 };
 
 /**
@@ -53,6 +55,20 @@ export async function getVehicleList(): Promise<VehicleListItem[]> {
     for (const p of profiles ?? []) names.set(p.id, p.full_name);
   }
 
+  // Engates ativos → placa da outra metade, nos dois sentidos.
+  const plateById = new Map(rows.map((v) => [v.id, v.plate]));
+  const coupledPlateById = new Map<string, string>();
+  const { data: couplings } = await db
+    .from("vehicle_couplings")
+    .select("tractor_id, trailer_id")
+    .is("uncoupled_at", null);
+  for (const c of couplings ?? []) {
+    const tractorPlate = plateById.get(c.tractor_id);
+    const trailerPlate = plateById.get(c.trailer_id);
+    if (trailerPlate) coupledPlateById.set(c.tractor_id, trailerPlate);
+    if (tractorPlate) coupledPlateById.set(c.trailer_id, tractorPlate);
+  }
+
   return rows.map((v) => {
     const activeDriverId = v.assignments?.find((a) => a.unassigned_at === null)?.driver_id ?? null;
     const docStatuses = (v.documents ?? [])
@@ -66,6 +82,56 @@ export async function getVehicleList(): Promise<VehicleListItem[]> {
       companyKind: v.company?.kind ?? "top_diesel",
       driverName: activeDriverId ? (names.get(activeDriverId) ?? null) : null,
       status: worstExpiryStatus(docStatuses),
+      coupledPlate: coupledPlateById.get(v.id) ?? null,
     };
   });
+}
+
+export type TrailerOption = {
+  id: string;
+  plate: string;
+  model: string | null;
+  tractorPlate: string | null; // engatado em qual cavalo agora (null = livre)
+};
+
+/** Reboques disponíveis para engate (semi_reboque/reboque ativos). */
+export async function getTrailerOptions(): Promise<TrailerOption[]> {
+  const db = await createClient();
+  const { data, error } = await db
+    .from("vehicles")
+    .select("id, plate, model, vehicle_type")
+    .in("vehicle_type", ["semi_reboque", "reboque"])
+    .eq("status", "ativo")
+    .is("deleted_at", null)
+    .order("plate");
+  if (error) throw new Error(`getTrailerOptions: ${error.message}`);
+  const trailers = data ?? [];
+  if (trailers.length === 0) return [];
+
+  const { data: couplings } = await db
+    .from("vehicle_couplings")
+    .select("tractor_id, trailer_id")
+    .is("uncoupled_at", null)
+    .in(
+      "trailer_id",
+      trailers.map((t) => t.id),
+    );
+  const tractorIds = [...new Set((couplings ?? []).map((c) => c.tractor_id))];
+  const tractorPlateById = new Map<string, string>();
+  if (tractorIds.length > 0) {
+    const { data: tractors } = await db.from("vehicles").select("id, plate").in("id", tractorIds);
+    for (const t of tractors ?? []) tractorPlateById.set(t.id, t.plate);
+  }
+  const tractorByTrailer = new Map<string, string>();
+  for (const c of couplings ?? []) {
+    const plate = tractorPlateById.get(c.tractor_id);
+    if (plate) tractorByTrailer.set(c.trailer_id, plate);
+  }
+
+  return trailers.map((t) => ({
+    id: t.id,
+    plate: t.plate,
+    model: t.model,
+    tractorPlate: tractorByTrailer.get(t.id) ?? null,
+  }));
 }

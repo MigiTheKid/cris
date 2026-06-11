@@ -12,6 +12,30 @@ Estado do projeto para retomar a qualquer momento.
   - Admin: CPF `000.000.000-00` / senha `mudar123` (Gabriel Krull) → /painel
   - Motorista: CPF `000.000.001-01` / senha `mudar123` (Daurio) → /motorista
 
+## ✅ Composição cavalo ⇄ reboque (11/06)
+
+- **Modelo**: "o motorista é do cavalo, o reboque segue o cavalo" — conjunto é
+  DERIVADO de dois vínculos temporais independentes. Migration
+  `20260611100000_vehicle_couplings.sql`: tabela espelho da de atribuição
+  (tractor_id/trailer_id/coupled_at/uncoupled_at), índices únicos (1 reboque
+  ativo/cavalo e vice-versa), **trigger valida tipos no banco** (só `cavalo`
+  engata; só `semi_reboque`/`reboque` é engatado — decisão Miguel: restrito),
+  RLS (staff tudo; motorista lê engate do próprio veículo).
+- `saveCoupling` (encerra os dois lados, abre o novo, audita couple/uncouple);
+  `CouplingDialog` (livre / neste cavalo / "em X — será movido" / Sem reboque);
+  `CompositionStrip` (o "trem": cavalo ⫘ reboque com status de cada placa +
+  "Fulano conduz o conjunto").
+- Aba **Composição** no detalhe (cavalo: gerencia + histórico de engates;
+  reboque: leitura invertida com cavalo+condutor); chips ⫘ na lista da Frota
+  (dois sentidos); "Conjunto atual: CAVALO ⫘ REBOQUE" no detalhe do motorista.
+- Consertado: pior status do veículo agora preserva "Vencido" vs "Crítico"
+  (worstExpiryStatus em vez de colapsar por tom).
+- **RLS testada**: +2 testes (12/12) — motorista do cavalo lê o próprio engate;
+  outro motorista não lê engate alheio.
+- **Verificado no browser ponta a ponta**; engate de teste desfeito (Gabriel
+  engata o real pela UI). Preparado pros PNEUS (M2): pneu pertence à placa,
+  diagrama desenha o conjunto, km do reboque infere-se pelo histórico de engate.
+
 ## ✅ M1 finalizada — editar motorista + fotos (10/06)
 
 - **Editar dados do motorista**: `saveDriverProfile` + `DriverProfileDialog`
