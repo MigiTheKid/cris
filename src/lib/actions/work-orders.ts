@@ -98,6 +98,10 @@ export async function saveWorkOrder(_prev: WoFormState, formData: FormData): Pro
   const vendorId = String(formData.get("vendorId") ?? "").trim() || null;
   const osRef = String(formData.get("osRef") ?? "").trim() || null;
   const notes = String(formData.get("notes") ?? "").trim() || null;
+  const photoPath = String(formData.get("photoPath") ?? "").trim() || null;
+  const aiExtracted = formData.get("aiExtracted") === "1";
+  const aiConfRaw = Number(formData.get("aiConfidence"));
+  const aiConfidence = Number.isFinite(aiConfRaw) && aiConfRaw > 0 ? aiConfRaw : null;
   const items = parseItems(formData.get("items"));
   const total = items.reduce((s, i) => s + i.costs.reduce((c, x) => c + x.cost, 0), 0);
 
@@ -125,6 +129,9 @@ export async function saveWorkOrder(_prev: WoFormState, formData: FormData): Pro
     os_ref: osRef,
     cost: total, // total denormalizado (soma dos custos) para somas rápidas
     notes,
+    ...(photoPath
+      ? { photo_path: photoPath, ai_extracted: aiExtracted, ai_confidence: aiConfidence }
+      : {}),
   };
 
   let orderId = id;

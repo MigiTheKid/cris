@@ -3,6 +3,7 @@
 import { Plus, Pencil, Wrench, Trash2 } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { WorkOrderDialog } from "./WorkOrderDialog";
+import { PhotoWorkOrder } from "./PhotoWorkOrder";
 import { DangerDeleteDialog } from "./DangerDeleteDialog";
 import { deleteWorkOrder } from "@/lib/actions/work-orders";
 import { REASON_LABEL } from "@/lib/maintenance-labels";
@@ -78,17 +79,25 @@ export function VehicleMaintTab({
             </div>
           )}
         </div>
-        <WorkOrderDialog
-          vehicleId={vehicleId}
-          systems={systems}
-          services={services}
-          vendors={vendors}
-          trigger={
-            <button className="cbtn primary" style={{ height: 40 }}>
-              <Plus size={16} /> Registrar manutenção
-            </button>
-          }
-        />
+        <div className="flex flex-col items-stretch gap-2">
+          <WorkOrderDialog
+            vehicleId={vehicleId}
+            systems={systems}
+            services={services}
+            vendors={vendors}
+            trigger={
+              <button className="cbtn primary" style={{ height: 40 }}>
+                <Plus size={16} /> Registrar manutenção
+              </button>
+            }
+          />
+          <PhotoWorkOrder
+            vehicleId={vehicleId}
+            systems={systems}
+            services={services}
+            vendors={vendors}
+          />
+        </div>
       </div>
 
       <div className="eyebrow" style={{ margin: "26px 0 12px" }}>

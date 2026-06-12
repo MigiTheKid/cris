@@ -1192,6 +1192,8 @@ export type Database = {
       }
       work_orders: {
         Row: {
+          ai_confidence: number | null
+          ai_extracted: boolean
           cost: number | null
           created_at: string
           created_by: string | null
@@ -1200,11 +1202,14 @@ export type Database = {
           odometer_km: number
           os_ref: string | null
           performed_at: string | null
+          photo_path: string | null
           reason: string
           vehicle_id: string
           vendor_id: string | null
         }
         Insert: {
+          ai_confidence?: number | null
+          ai_extracted?: boolean
           cost?: number | null
           created_at?: string
           created_by?: string | null
@@ -1213,11 +1218,14 @@ export type Database = {
           odometer_km: number
           os_ref?: string | null
           performed_at?: string | null
+          photo_path?: string | null
           reason?: string
           vehicle_id: string
           vendor_id?: string | null
         }
         Update: {
+          ai_confidence?: number | null
+          ai_extracted?: boolean
           cost?: number | null
           created_at?: string
           created_by?: string | null
@@ -1226,6 +1234,7 @@ export type Database = {
           odometer_km?: number
           os_ref?: string | null
           performed_at?: string | null
+          photo_path?: string | null
           reason?: string
           vehicle_id?: string
           vendor_id?: string | null

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState, type ReactElement } from "react";
+import { useActionState, useCallback, useEffect, useState, type ReactElement } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X, Trash2 } from "lucide-react";
 import {
@@ -98,13 +98,24 @@ export function WorkOrderDialog({
   vendors,
   trigger,
   initial,
+  forcedOpen,
+  onForcedOpenChange,
+  photoPath,
+  aiConfidence,
+  warnings,
 }: {
   vehicleId: string;
   systems: MaintSystem[];
   services: ServiceOption[];
   vendors: Vendor[];
-  trigger: ReactElement;
+  trigger?: ReactElement;
   initial?: WorkOrder;
+  /** Modo controlado (OS por foto): abre sem trigger, já pré-preenchido. */
+  forcedOpen?: boolean;
+  onForcedOpenChange?: (open: boolean) => void;
+  photoPath?: string;
+  aiConfidence?: number | null;
+  warnings?: string[];
 }) {
   // Oficinas que fazem manutenção (+ a já selecionada, mesmo se inativa).
   const maintVendors = vendors.filter(
@@ -121,7 +132,16 @@ export function WorkOrderDialog({
     .filter((g) => g.list.length > 0);
 
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const controlled = forcedOpen !== undefined;
+  const open = controlled ? forcedOpen : openState;
+  const setOpen = useCallback(
+    (o: boolean) => {
+      if (controlled) onForcedOpenChange?.(o);
+      else setOpenState(o);
+    },
+    [controlled, onForcedOpenChange],
+  );
   const [state, formAction, pending] = useActionState(saveWorkOrder, {});
   const isEdit = !!initial?.id;
 
@@ -144,7 +164,7 @@ export function WorkOrderDialog({
       setOpen(false);
       router.refresh();
     }
-  }, [state.ok, router]);
+  }, [state.ok, router, setOpen]);
 
   const patchItem = (i: number, p: Partial<ItemState>) =>
     setItems((xs) => xs.map((x, k) => (k === i ? { ...x, ...p } : x)));
@@ -192,7 +212,7 @@ export function WorkOrderDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={trigger} />
+      {trigger && <DialogTrigger render={trigger} />}
       <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editar manutenção" : "Registrar manutenção"}</DialogTitle>
@@ -207,6 +227,25 @@ export function WorkOrderDialog({
           {initial?.id && <input type="hidden" name="id" value={initial.id} />}
           <input type="hidden" name="odometerKm" value={odo} />
           <input type="hidden" name="items" value={itemsPayload} />
+          {photoPath && (
+            <>
+              <input type="hidden" name="photoPath" value={photoPath} />
+              <input type="hidden" name="aiExtracted" value="1" />
+              {aiConfidence != null && (
+                <input type="hidden" name="aiConfidence" value={String(aiConfidence)} />
+              )}
+            </>
+          )}
+
+          {warnings && warnings.length > 0 && (
+            <div className="space-y-1 rounded-xl border border-[color-mix(in_oklab,var(--warn)_35%,transparent)] bg-[color-mix(in_oklab,var(--warn)_12%,transparent)] px-3 py-2.5">
+              {warnings.map((w, i) => (
+                <div key={i} className="text-xs font-semibold text-[var(--text-2)]">
+                  ⚠️ {w}
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-3">
             <div className={field}>
