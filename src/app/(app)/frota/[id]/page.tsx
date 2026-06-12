@@ -5,6 +5,7 @@ import { getDriverList } from "@/lib/data/drivers";
 import { getTrailerOptions } from "@/lib/data/vehicles";
 import { getVehicleRodado, getStockTires, type VehicleRodado } from "@/lib/data/tires";
 import { getVehicleOilChanges } from "@/lib/data/oil-changes";
+import { getVehicleMaintenance, getMaintenanceCatalog } from "@/lib/data/maintenance";
 import { getVendors } from "@/lib/data/vendors";
 import { getTireThresholds } from "@/lib/data/settings";
 import { getCurrentProfile } from "@/lib/auth";
@@ -14,19 +15,33 @@ export const dynamic = "force-dynamic";
 
 export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [detail, docTypes, drivers, trailers, rodado, stock, thresholds, oil, vendors, profile] =
-    await Promise.all([
-      getVehicleDetail(id),
-      getDocumentTypes("vehicle", true),
-      getDriverList(),
-      getTrailerOptions(),
-      getVehicleRodado(id),
-      getStockTires(),
-      getTireThresholds(),
-      getVehicleOilChanges(id),
-      getVendors(),
-      getCurrentProfile(),
-    ]);
+  const [
+    detail,
+    docTypes,
+    drivers,
+    trailers,
+    rodado,
+    stock,
+    thresholds,
+    oil,
+    maint,
+    catalog,
+    vendors,
+    profile,
+  ] = await Promise.all([
+    getVehicleDetail(id),
+    getDocumentTypes("vehicle", true),
+    getDriverList(),
+    getTrailerOptions(),
+    getVehicleRodado(id),
+    getStockTires(),
+    getTireThresholds(),
+    getVehicleOilChanges(id),
+    getVehicleMaintenance(id),
+    getMaintenanceCatalog(),
+    getVendors(),
+    getCurrentProfile(),
+  ]);
   if (!detail) notFound();
 
   // Conjunto: cavalo mostra o rodado do reboque engatado junto (e vice-versa não — reboque mostra só o seu).
@@ -47,6 +62,9 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
       thresholds={thresholds}
       oil={oil}
       vendors={vendors}
+      maint={maint}
+      systems={catalog.systems}
+      services={catalog.services}
       canDelete={profile?.role === "admin"}
     />
   );

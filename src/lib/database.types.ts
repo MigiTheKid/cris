@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -329,6 +329,30 @@ export type Database = {
           },
         ]
       }
+      maintenance_systems: {
+        Row: {
+          id: number
+          is_active: boolean
+          name: string
+          sort: number
+          vmrs_code: string | null
+        }
+        Insert: {
+          id: number
+          is_active?: boolean
+          name: string
+          sort?: number
+          vmrs_code?: string | null
+        }
+        Update: {
+          id?: number
+          is_active?: boolean
+          name?: string
+          sort?: number
+          vmrs_code?: string | null
+        }
+        Relationships: []
+      }
       oil_change_items: {
         Row: {
           category: string
@@ -489,6 +513,51 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_catalog: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          default_interval_km: number | null
+          id: string
+          is_active: boolean
+          name: string
+          system_id: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          default_interval_km?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
+          system_id: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          default_interval_km?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          system_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_catalog_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_catalog_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_systems"
             referencedColumns: ["id"]
           },
         ]
@@ -1027,6 +1096,160 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_costs: {
+        Row: {
+          category: string
+          cost: number
+          id: string
+          item_id: string
+          label: string
+          quantity: number | null
+          unit: string | null
+        }
+        Insert: {
+          category: string
+          cost?: number
+          id?: string
+          item_id: string
+          label: string
+          quantity?: number | null
+          unit?: string | null
+        }
+        Update: {
+          category?: string
+          cost?: number
+          id?: string
+          item_id?: string
+          label?: string
+          quantity?: number | null
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_costs_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_items: {
+        Row: {
+          description: string | null
+          id: string
+          label: string
+          next_km: number | null
+          service_id: string | null
+          system_id: number
+          work_order_id: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          label: string
+          next_km?: number | null
+          service_id?: string | null
+          system_id: number
+          work_order_id: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          label?: string
+          next_km?: number | null
+          service_id?: string | null
+          system_id?: number
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_items_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_items_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_orders: {
+        Row: {
+          cost: number | null
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          odometer_km: number
+          os_ref: string | null
+          performed_at: string | null
+          reason: string
+          vehicle_id: string
+          vendor_id: string | null
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          odometer_km: number
+          os_ref?: string | null
+          performed_at?: string | null
+          reason?: string
+          vehicle_id: string
+          vendor_id?: string | null
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          odometer_km?: number
+          os_ref?: string | null
+          performed_at?: string | null
+          reason?: string
+          vehicle_id?: string
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
             referencedColumns: ["id"]
           },
         ]

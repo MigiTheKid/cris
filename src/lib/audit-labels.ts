@@ -23,6 +23,8 @@ export const ENTITY_LABEL: Record<string, string> = {
   coupling: "Engate de reboque",
   tire: "Pneu",
   oil_change: "Troca de óleo",
+  work_order: "Manutenção (OS)",
+  service_catalog: "Serviço de manutenção",
   vendor: "Oficina",
   settings: "Parâmetros",
   document_type: "Tipo de documento",

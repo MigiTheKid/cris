@@ -35,9 +35,11 @@ import { DangerDeleteDialog } from "./DangerDeleteDialog";
 import { OilChangeDialog } from "./OilChangeDialog";
 import { PhotoUpload } from "./PhotoUpload";
 import { VehicleTiresTab } from "./VehicleTiresTab";
+import { VehicleMaintTab } from "./VehicleMaintTab";
 import { deleteVehicle } from "@/lib/actions/vehicles";
 import type { VehicleRodado, StockTire } from "@/lib/data/tires";
 import type { VehicleOil } from "@/lib/data/oil-changes";
+import type { MaintSystem, ServiceOption, VehicleMaintenance } from "@/lib/data/maintenance";
 import type { Vendor } from "@/lib/data/vendors";
 import type { TireThresholds } from "@/lib/tires";
 import { saveVehicleDocument } from "@/lib/actions/documents";
@@ -64,10 +66,7 @@ const DOC_ICON: Record<string, typeof FileText> = {
   outro: FileText,
 };
 
-const SOON_TABS = [
-  { id: "maint", label: "Manutenções", icon: Wrench, soon: "M3" },
-  { id: "fuel", label: "Abastecimentos", icon: Fuel, soon: "M3" },
-] as const;
+const SOON_TABS = [{ id: "fuel", label: "Abastecimentos", icon: Fuel, soon: "M3" }] as const;
 
 function daysText(days: number | null) {
   if (days == null) return "sem data";
@@ -86,6 +85,9 @@ export function VehicleDetailView({
   thresholds,
   oil,
   vendors,
+  maint,
+  systems,
+  services,
   canDelete = false,
 }: {
   detail: VehicleDetail;
@@ -97,6 +99,9 @@ export function VehicleDetailView({
   thresholds: TireThresholds;
   oil: VehicleOil;
   vendors: Vendor[];
+  maint: VehicleMaintenance;
+  systems: MaintSystem[];
+  services: ServiceOption[];
   canDelete?: boolean;
 }) {
   const [tab, setTab] = useState<string>("docs");
@@ -265,6 +270,21 @@ export function VehicleDetailView({
           <Droplet size={16} /> Trocas de óleo
           {oil.status.tone !== "ok" && oil.status.tone !== "idle" && (
             <span className="mini" style={{ background: TONE_VAR[oil.status.tone] }} />
+          )}
+        </button>
+        <button
+          className={"vd-tab" + (tab === "maint" ? " active" : "")}
+          onClick={() => setTab("maint")}
+        >
+          <Wrench size={16} /> Manutenções
+          {maint.upcoming.some((u) => u.tone === "crit" || u.tone === "warn") && (
+            <span
+              className="mini"
+              style={{
+                background:
+                  TONE_VAR[maint.upcoming.some((u) => u.tone === "crit") ? "crit" : "warn"],
+              }}
+            />
           )}
         </button>
         {SOON_TABS.map((t) => (
@@ -646,6 +666,16 @@ export function VehicleDetailView({
               <div className="vd-hist">Nenhuma troca registrada ainda.</div>
             )}
           </div>
+        )}
+
+        {tab === "maint" && (
+          <VehicleMaintTab
+            vehicleId={detail.id}
+            maint={maint}
+            systems={systems}
+            services={services}
+            vendors={vendors}
+          />
         )}
 
         {SOON_TABS.some((t) => t.id === tab) &&
