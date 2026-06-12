@@ -39,9 +39,12 @@ const inputCls =
 export function VendorDialog({
   trigger,
   initial,
+  defaultName,
 }: {
   trigger: ReactElement;
   initial?: VendorInitial;
+  /** Pré-preenche o nome ao criar (ex.: oficina lida pela IA na nota). */
+  defaultName?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -74,7 +77,7 @@ export function VendorDialog({
             <label className={labelCls}>Nome</label>
             <input
               name="name"
-              defaultValue={initial?.name ?? ""}
+              defaultValue={initial?.name ?? defaultName ?? ""}
               className={inputCls}
               placeholder="ex.: Concessionária Mercedes"
               required

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { saveWorkOrder } from "@/lib/actions/work-orders";
 import { REASON_LABEL } from "@/lib/maintenance-labels";
+import { VendorDialog } from "./VendorDialog";
 import type { MaintSystem, ServiceOption, WorkOrder } from "@/lib/data/maintenance";
 import type { Vendor } from "@/lib/data/vendors";
 
@@ -103,6 +104,7 @@ export function WorkOrderDialog({
   photoPath,
   aiConfidence,
   warnings,
+  suggestedVendorName,
 }: {
   vehicleId: string;
   systems: MaintSystem[];
@@ -116,6 +118,8 @@ export function WorkOrderDialog({
   photoPath?: string;
   aiConfidence?: number | null;
   warnings?: string[];
+  /** Nome da oficina lido na nota quando ela não está no catálogo (cadastro rápido). */
+  suggestedVendorName?: string | null;
 }) {
   // Oficinas que fazem manutenção (+ a já selecionada, mesmo se inativa).
   const maintVendors = vendors.filter(
@@ -210,339 +214,391 @@ export function WorkOrderDialog({
       })),
   );
 
+  // Nota original (recém-fotografada ou da OS sendo revisada) para conferir lado a lado.
+  const viewPath = photoPath ?? initial?.photoPath ?? null;
+  const viewUrl = viewPath ? `/api/os/photo?path=${encodeURIComponent(viewPath)}` : null;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger render={trigger} />}
-      <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent
+        className={"max-h-[88vh] overflow-y-auto " + (viewUrl ? "sm:max-w-6xl" : "sm:max-w-2xl")}
+      >
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editar manutenção" : "Registrar manutenção"}</DialogTitle>
           <DialogDescription>
             Lance a OS da oficina: cada serviço herda o sistema do veículo e alimenta os indicadores
             sozinho.
+            {viewUrl && (
+              <>
+                {" "}
+                <a
+                  href={viewUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-semibold text-[var(--brand-amber)] underline lg:hidden"
+                >
+                  Ver nota original ↗
+                </a>
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4">
-          <input type="hidden" name="vehicleId" value={vehicleId} />
-          {initial?.id && <input type="hidden" name="id" value={initial.id} />}
-          <input type="hidden" name="odometerKm" value={odo} />
-          <input type="hidden" name="items" value={itemsPayload} />
-          {photoPath && (
-            <>
-              <input type="hidden" name="photoPath" value={photoPath} />
-              <input type="hidden" name="aiExtracted" value="1" />
-              {aiConfidence != null && (
+        <div className={viewUrl ? "grid items-start gap-5 lg:grid-cols-2" : undefined}>
+          {viewUrl && (
+            <div className="sticky top-0 hidden lg:block">
+              <iframe
+                src={viewUrl}
+                title="Nota original"
+                className="h-[70vh] w-full rounded-xl border border-[var(--border)] bg-white"
+              />
+              <a
+                href={viewUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1.5 inline-block text-xs font-semibold text-[var(--text-3)] underline"
+              >
+                Abrir a nota em nova aba ↗
+              </a>
+            </div>
+          )}
+
+          <form action={formAction} className="space-y-4">
+            <input type="hidden" name="vehicleId" value={vehicleId} />
+            {initial?.id && <input type="hidden" name="id" value={initial.id} />}
+            <input type="hidden" name="odometerKm" value={odo} />
+            <input type="hidden" name="items" value={itemsPayload} />
+            {photoPath && <input type="hidden" name="photoPath" value={photoPath} />}
+            {aiConfidence != null && (
+              <>
+                <input type="hidden" name="aiExtracted" value="1" />
                 <input type="hidden" name="aiConfidence" value={String(aiConfidence)} />
-              )}
-            </>
-          )}
+              </>
+            )}
 
-          {warnings && warnings.length > 0 && (
-            <div className="space-y-1 rounded-xl border border-[color-mix(in_oklab,var(--warn)_35%,transparent)] bg-[color-mix(in_oklab,var(--warn)_12%,transparent)] px-3 py-2.5">
-              {warnings.map((w, i) => (
-                <div key={i} className="text-xs font-semibold text-[var(--text-2)]">
-                  ⚠️ {w}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="grid grid-cols-3 gap-3">
-            <div className={field}>
-              <label className={labelCls}>Km do veículo</label>
-              <input
-                inputMode="numeric"
-                value={odo}
-                onChange={(e) => setOdo(e.target.value)}
-                className={inputCls + " mono"}
-                placeholder="412747"
-                required
-              />
-            </div>
-            <div className={field}>
-              <label className={labelCls}>Data (opcional)</label>
-              <input
-                name="performedAt"
-                type="date"
-                defaultValue={initial?.performedAt ?? ""}
-                className={inputCls}
-              />
-            </div>
-            <div className={field}>
-              <label className={labelCls}>Motivo</label>
-              <select
-                name="reason"
-                defaultValue={initial?.reason ?? "corretiva"}
-                className={inputCls}
-              >
-                {Object.entries(REASON_LABEL).map(([v, l]) => (
-                  <option key={v} value={v}>
-                    {l}
-                  </option>
+            {warnings && warnings.length > 0 && (
+              <div className="space-y-1 rounded-xl border border-[color-mix(in_oklab,var(--warn)_35%,transparent)] bg-[color-mix(in_oklab,var(--warn)_12%,transparent)] px-3 py-2.5">
+                {warnings.map((w, i) => (
+                  <div key={i} className="text-xs font-semibold text-[var(--text-2)]">
+                    ⚠️ {w}
+                  </div>
                 ))}
-              </select>
-            </div>
-          </div>
+              </div>
+            )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className={field}>
-              <label className={labelCls}>Oficina (opcional)</label>
-              <select name="vendorId" defaultValue={initial?.vendorId ?? ""} className={inputCls}>
-                <option value="">— nenhuma —</option>
-                {maintVendors.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.name}
-                  </option>
-                ))}
-              </select>
+            <div className="grid grid-cols-3 gap-3">
+              <div className={field}>
+                <label className={labelCls}>Km do veículo</label>
+                <input
+                  inputMode="numeric"
+                  value={odo}
+                  onChange={(e) => setOdo(e.target.value)}
+                  className={inputCls + " mono"}
+                  placeholder="412747"
+                  required
+                />
+              </div>
+              <div className={field}>
+                <label className={labelCls}>Data (opcional)</label>
+                <input
+                  name="performedAt"
+                  type="date"
+                  defaultValue={initial?.performedAt ?? ""}
+                  className={inputCls}
+                />
+              </div>
+              <div className={field}>
+                <label className={labelCls}>Motivo</label>
+                <select
+                  name="reason"
+                  defaultValue={initial?.reason ?? "corretiva"}
+                  className={inputCls}
+                >
+                  {Object.entries(REASON_LABEL).map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className={field}>
-              <label className={labelCls}>Nº da OS / nota (opcional)</label>
-              <input
-                name="osRef"
-                defaultValue={initial?.osRef ?? ""}
-                className={inputCls}
-                placeholder="ex.: OS 4821"
-              />
-            </div>
-          </div>
 
-          {/* --- Serviços executados --- */}
-          <div className="space-y-3">
-            {items.map((it, i) => (
-              <div
-                key={i}
-                className="space-y-2.5 rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--panel-solid)_60%,transparent)] p-3.5"
-              >
-                <div className="flex items-center gap-2">
-                  <select
-                    value={it.serviceId}
-                    onChange={(e) => onPickService(i, e.target.value)}
-                    className={cellCls + " min-w-0 flex-1 px-2.5 font-semibold"}
-                  >
-                    <option value="">Serviço avulso (digite abaixo)…</option>
-                    {grouped.map((g) => (
-                      <optgroup key={g.sys.id} label={g.sys.name}>
-                        {g.list.map((s) => (
-                          <option key={s.id} value={s.id}>
+            <div className="grid grid-cols-2 gap-3">
+              <div className={field}>
+                <label className={labelCls}>Oficina (opcional)</label>
+                <select name="vendorId" defaultValue={initial?.vendorId ?? ""} className={inputCls}>
+                  <option value="">— nenhuma —</option>
+                  {maintVendors.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
+                  ))}
+                </select>
+                {suggestedVendorName && !initial?.vendorId && (
+                  <VendorDialog
+                    defaultName={suggestedVendorName}
+                    trigger={
+                      <button
+                        type="button"
+                        className="self-start text-xs font-semibold text-[var(--brand-amber)] underline"
+                      >
+                        + Cadastrar “{suggestedVendorName}” como oficina
+                      </button>
+                    }
+                  />
+                )}
+              </div>
+              <div className={field}>
+                <label className={labelCls}>Nº da OS / nota (opcional)</label>
+                <input
+                  name="osRef"
+                  defaultValue={initial?.osRef ?? ""}
+                  className={inputCls}
+                  placeholder="ex.: OS 4821"
+                />
+              </div>
+            </div>
+
+            {/* --- Serviços executados --- */}
+            <div className="space-y-3">
+              {items.map((it, i) => (
+                <div
+                  key={i}
+                  className="space-y-2.5 rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--panel-solid)_60%,transparent)] p-3.5"
+                >
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={it.serviceId}
+                      onChange={(e) => onPickService(i, e.target.value)}
+                      className={cellCls + " min-w-0 flex-1 px-2.5 font-semibold"}
+                    >
+                      <option value="">Serviço avulso (digite abaixo)…</option>
+                      {grouped.map((g) => (
+                        <optgroup key={g.sys.id} label={g.sys.name}>
+                          {g.list.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                    {items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setItems((xs) => xs.filter((_, k) => k !== i))}
+                        className="grid size-8 shrink-0 place-items-center rounded-lg text-[var(--text-3)] hover:text-[var(--crit)]"
+                        aria-label="Remover serviço"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </div>
+
+                  {!it.serviceId && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        value={it.label}
+                        onChange={(e) => patchItem(i, { label: e.target.value })}
+                        className={cellCls + " px-2.5"}
+                        placeholder="nome do serviço"
+                      />
+                      <select
+                        value={it.systemId}
+                        onChange={(e) => patchItem(i, { systemId: e.target.value })}
+                        className={cellCls + " px-2"}
+                      >
+                        <option value="">sistema…</option>
+                        {systems.map((s) => (
+                          <option key={s.id} value={String(s.id)}>
                             {s.name}
                           </option>
                         ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                  {items.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => setItems((xs) => xs.filter((_, k) => k !== i))}
-                      className="grid size-8 shrink-0 place-items-center rounded-lg text-[var(--text-3)] hover:text-[var(--crit)]"
-                      aria-label="Remover serviço"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                      </select>
+                    </div>
                   )}
-                </div>
 
-                {!it.serviceId && (
                   <div className="grid grid-cols-2 gap-2">
                     <input
-                      value={it.label}
-                      onChange={(e) => patchItem(i, { label: e.target.value })}
+                      value={it.description}
+                      onChange={(e) => patchItem(i, { description: e.target.value })}
                       className={cellCls + " px-2.5"}
-                      placeholder="nome do serviço"
+                      placeholder="detalhe / componente (opcional)"
                     />
-                    <select
-                      value={it.systemId}
-                      onChange={(e) => patchItem(i, { systemId: e.target.value })}
-                      className={cellCls + " px-2"}
+                    <input
+                      inputMode="numeric"
+                      value={it.nextKm}
+                      onChange={(e) => patchItem(i, { nextKm: e.target.value })}
+                      className={cellCls + " mono px-2.5"}
+                      placeholder="próxima em (km) — opcional"
+                    />
+                  </div>
+
+                  {/* Peças */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold tracking-[0.08em] text-[var(--text-3)] uppercase">
+                        Peças
+                      </span>
+                      <div className="flex gap-1 pr-7 text-[10px] font-bold text-[var(--text-3)] uppercase">
+                        <span className="w-12 text-center">Qtd</span>
+                        <span className="w-12 text-center">Un.</span>
+                        <span className="w-20 text-center">R$</span>
+                      </div>
+                    </div>
+                    {it.pecas.map((r, k) => (
+                      <div key={k} className="flex items-center gap-1">
+                        <input
+                          value={r.label}
+                          onChange={(e) =>
+                            patchItem(i, {
+                              pecas: it.pecas.map((x, y) =>
+                                y === k ? { ...x, label: e.target.value } : x,
+                              ),
+                            })
+                          }
+                          className={cellCls + " min-w-0 flex-1 px-2.5"}
+                          placeholder="peça"
+                        />
+                        <input
+                          inputMode="decimal"
+                          value={r.qty}
+                          onChange={(e) =>
+                            patchItem(i, {
+                              pecas: it.pecas.map((x, y) =>
+                                y === k ? { ...x, qty: e.target.value } : x,
+                              ),
+                            })
+                          }
+                          className={cellCls + " mono w-12 px-1.5 text-right"}
+                          placeholder="0"
+                        />
+                        <select
+                          value={r.unit}
+                          onChange={(e) =>
+                            patchItem(i, {
+                              pecas: it.pecas.map((x, y) =>
+                                y === k ? { ...x, unit: e.target.value } : x,
+                              ),
+                            })
+                          }
+                          className={cellCls + " w-12 px-1"}
+                        >
+                          {UNITS.map((u) => (
+                            <option key={u} value={u}>
+                              {u}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          inputMode="decimal"
+                          value={r.cost}
+                          onChange={(e) =>
+                            patchItem(i, {
+                              pecas: it.pecas.map((x, y) =>
+                                y === k ? { ...x, cost: e.target.value } : x,
+                              ),
+                            })
+                          }
+                          className={cellCls + " mono w-20 px-2 text-right"}
+                          placeholder="0,00"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            patchItem(i, { pecas: it.pecas.filter((_, y) => y !== k) })
+                          }
+                          className="grid size-6 place-items-center rounded-md text-[var(--text-3)] hover:text-[var(--crit)]"
+                          aria-label="Remover peça"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => patchItem(i, { pecas: [...it.pecas, emptyPeca()] })}
+                      className="cbtn ghost px-3"
+                      style={{ height: 30 }}
                     >
-                      <option value="">sistema…</option>
-                      {systems.map((s) => (
-                        <option key={s.id} value={String(s.id)}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
+                      <Plus size={14} /> Peça
+                    </button>
                   </div>
-                )}
 
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    value={it.description}
-                    onChange={(e) => patchItem(i, { description: e.target.value })}
-                    className={cellCls + " px-2.5"}
-                    placeholder="detalhe / componente (opcional)"
-                  />
-                  <input
-                    inputMode="numeric"
-                    value={it.nextKm}
-                    onChange={(e) => patchItem(i, { nextKm: e.target.value })}
-                    className={cellCls + " mono px-2.5"}
-                    placeholder="próxima em (km) — opcional"
-                  />
-                </div>
-
-                {/* Peças */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold tracking-[0.08em] text-[var(--text-3)] uppercase">
-                      Peças
+                  {/* Mão de obra + subtotal */}
+                  <div className="flex items-center gap-1">
+                    <span className="min-w-0 flex-1 truncate text-sm text-[var(--text-2)]">
+                      Mão de obra
                     </span>
-                    <div className="flex gap-1 pr-7 text-[10px] font-bold text-[var(--text-3)] uppercase">
-                      <span className="w-12 text-center">Qtd</span>
-                      <span className="w-12 text-center">Un.</span>
-                      <span className="w-20 text-center">R$</span>
-                    </div>
+                    <input
+                      inputMode="decimal"
+                      value={it.mo.qty}
+                      onChange={(e) => patchItem(i, { mo: { ...it.mo, qty: e.target.value } })}
+                      className={cellCls + " mono w-12 px-1.5 text-right"}
+                      placeholder="h"
+                    />
+                    <span className="w-12 text-center text-xs text-[var(--text-3)]">h</span>
+                    <input
+                      inputMode="decimal"
+                      value={it.mo.cost}
+                      onChange={(e) => patchItem(i, { mo: { ...it.mo, cost: e.target.value } })}
+                      className={cellCls + " mono w-20 px-2 text-right"}
+                      placeholder="0,00"
+                    />
+                    <span className="w-6" />
                   </div>
-                  {it.pecas.map((r, k) => (
-                    <div key={k} className="flex items-center gap-1">
-                      <input
-                        value={r.label}
-                        onChange={(e) =>
-                          patchItem(i, {
-                            pecas: it.pecas.map((x, y) =>
-                              y === k ? { ...x, label: e.target.value } : x,
-                            ),
-                          })
-                        }
-                        className={cellCls + " min-w-0 flex-1 px-2.5"}
-                        placeholder="peça"
-                      />
-                      <input
-                        inputMode="decimal"
-                        value={r.qty}
-                        onChange={(e) =>
-                          patchItem(i, {
-                            pecas: it.pecas.map((x, y) =>
-                              y === k ? { ...x, qty: e.target.value } : x,
-                            ),
-                          })
-                        }
-                        className={cellCls + " mono w-12 px-1.5 text-right"}
-                        placeholder="0"
-                      />
-                      <select
-                        value={r.unit}
-                        onChange={(e) =>
-                          patchItem(i, {
-                            pecas: it.pecas.map((x, y) =>
-                              y === k ? { ...x, unit: e.target.value } : x,
-                            ),
-                          })
-                        }
-                        className={cellCls + " w-12 px-1"}
-                      >
-                        {UNITS.map((u) => (
-                          <option key={u} value={u}>
-                            {u}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        inputMode="decimal"
-                        value={r.cost}
-                        onChange={(e) =>
-                          patchItem(i, {
-                            pecas: it.pecas.map((x, y) =>
-                              y === k ? { ...x, cost: e.target.value } : x,
-                            ),
-                          })
-                        }
-                        className={cellCls + " mono w-20 px-2 text-right"}
-                        placeholder="0,00"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => patchItem(i, { pecas: it.pecas.filter((_, y) => y !== k) })}
-                        className="grid size-6 place-items-center rounded-md text-[var(--text-3)] hover:text-[var(--crit)]"
-                        aria-label="Remover peça"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => patchItem(i, { pecas: [...it.pecas, emptyPeca()] })}
-                    className="cbtn ghost px-3"
-                    style={{ height: 30 }}
-                  >
-                    <Plus size={14} /> Peça
-                  </button>
+                  <div className="flex items-center justify-between border-t border-[var(--border)] pt-2 text-sm">
+                    <span className="text-xs text-[var(--text-3)]">Subtotal do serviço</span>
+                    <span className="mono font-semibold text-[var(--text)]">
+                      {brl(itemTotal(it))}
+                    </span>
+                  </div>
                 </div>
+              ))}
 
-                {/* Mão de obra + subtotal */}
-                <div className="flex items-center gap-1">
-                  <span className="min-w-0 flex-1 truncate text-sm text-[var(--text-2)]">
-                    Mão de obra
-                  </span>
-                  <input
-                    inputMode="decimal"
-                    value={it.mo.qty}
-                    onChange={(e) => patchItem(i, { mo: { ...it.mo, qty: e.target.value } })}
-                    className={cellCls + " mono w-12 px-1.5 text-right"}
-                    placeholder="h"
-                  />
-                  <span className="w-12 text-center text-xs text-[var(--text-3)]">h</span>
-                  <input
-                    inputMode="decimal"
-                    value={it.mo.cost}
-                    onChange={(e) => patchItem(i, { mo: { ...it.mo, cost: e.target.value } })}
-                    className={cellCls + " mono w-20 px-2 text-right"}
-                    placeholder="0,00"
-                  />
-                  <span className="w-6" />
-                </div>
-                <div className="flex items-center justify-between border-t border-[var(--border)] pt-2 text-sm">
-                  <span className="text-xs text-[var(--text-3)]">Subtotal do serviço</span>
-                  <span className="mono font-semibold text-[var(--text)]">
-                    {brl(itemTotal(it))}
-                  </span>
-                </div>
-              </div>
-            ))}
-
-            <button
-              type="button"
-              onClick={() => setItems((xs) => [...xs, emptyItem()])}
-              className="cbtn ghost px-3"
-              style={{ height: 34 }}
-            >
-              <Plus size={14} /> Adicionar serviço
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--panel-solid)] px-4 py-2.5">
-            <span className="text-[11px] font-bold tracking-[0.1em] text-[var(--text-3)] uppercase">
-              Total da OS
-            </span>
-            <span className="mono text-lg font-bold text-[var(--text)]">{brl(total)}</span>
-          </div>
-
-          <div className={field}>
-            <label className={labelCls}>Observações (opcional)</label>
-            <input name="notes" defaultValue={initial?.notes ?? ""} className={inputCls} />
-          </div>
-
-          {state.error && (
-            <div className="rounded-xl border border-[color-mix(in_oklab,var(--crit)_30%,transparent)] bg-[color-mix(in_oklab,var(--crit)_12%,transparent)] px-3 py-2 text-sm font-semibold text-[var(--crit)]">
-              {state.error}
+              <button
+                type="button"
+                onClick={() => setItems((xs) => [...xs, emptyItem()])}
+                className="cbtn ghost px-3"
+                style={{ height: 34 }}
+              >
+                <Plus size={14} /> Adicionar serviço
+              </button>
             </div>
-          )}
 
-          <DialogFooter>
-            <DialogClose
-              render={
-                <button type="button" className="cbtn ghost">
-                  Cancelar
-                </button>
-              }
-            />
-            <button type="submit" className="cbtn primary" disabled={pending}>
-              {pending ? "Salvando…" : "Salvar"}
-            </button>
-          </DialogFooter>
-        </form>
+            <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--panel-solid)] px-4 py-2.5">
+              <span className="text-[11px] font-bold tracking-[0.1em] text-[var(--text-3)] uppercase">
+                Total da OS
+              </span>
+              <span className="mono text-lg font-bold text-[var(--text)]">{brl(total)}</span>
+            </div>
+
+            <div className={field}>
+              <label className={labelCls}>Observações (opcional)</label>
+              <input name="notes" defaultValue={initial?.notes ?? ""} className={inputCls} />
+            </div>
+
+            {state.error && (
+              <div className="rounded-xl border border-[color-mix(in_oklab,var(--crit)_30%,transparent)] bg-[color-mix(in_oklab,var(--crit)_12%,transparent)] px-3 py-2 text-sm font-semibold text-[var(--crit)]">
+                {state.error}
+              </div>
+            )}
+
+            <DialogFooter>
+              <DialogClose
+                render={
+                  <button type="button" className="cbtn ghost">
+                    Cancelar
+                  </button>
+                }
+              />
+              <button type="submit" className="cbtn primary" disabled={pending}>
+                {pending ? "Salvando…" : "Salvar"}
+              </button>
+            </DialogFooter>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

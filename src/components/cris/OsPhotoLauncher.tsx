@@ -18,6 +18,7 @@ export type OsExtractHandoff = {
   vehicle: { id: string; plate: string } | null;
   plateFound: string | null;
   vehicles?: { id: string; plate: string }[];
+  vendorNameFound?: string | null;
   order: WorkOrder;
   warnings: string[];
   confidence: number;

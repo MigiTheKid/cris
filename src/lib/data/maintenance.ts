@@ -34,6 +34,7 @@ export type WorkOrder = {
   vendorName: string | null;
   osRef: string | null;
   notes: string | null;
+  photoPath: string | null;
   items: WoItem[];
   total: number;
 };
@@ -126,6 +127,7 @@ type RawOrder = {
   os_ref: string | null;
   cost: number | null;
   notes: string | null;
+  photo_path: string | null;
   vendorRel: { name: string } | null;
   work_order_items: {
     id: string;
@@ -175,13 +177,14 @@ function mapOrder(o: RawOrder): WorkOrder {
     vendorName: o.vendorRel?.name ?? null,
     osRef: o.os_ref,
     notes: o.notes,
+    photoPath: o.photo_path,
     items,
     total: items.reduce((s, i) => s + i.total, 0),
   };
 }
 
 const ORDER_SELECT =
-  "id, vehicle_id, performed_at, odometer_km, reason, vendor_id, os_ref, cost, notes, " +
+  "id, vehicle_id, performed_at, odometer_km, reason, vendor_id, os_ref, cost, notes, photo_path, " +
   "vendorRel:vendors(name), " +
   "work_order_items(id, service_id, label, system_id, description, next_km, " +
   "system:maintenance_systems(name), work_order_costs(category, label, quantity, unit, cost))";

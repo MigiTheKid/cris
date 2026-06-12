@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Pencil, Wrench, Trash2 } from "lucide-react";
+import { Plus, Pencil, Wrench, Trash2, Receipt } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { WorkOrderDialog } from "./WorkOrderDialog";
 import { PhotoWorkOrder } from "./PhotoWorkOrder";
@@ -127,6 +127,17 @@ export function VehicleMaintTab({
                       .join(" · ") || "sem detalhes"}
                   </div>
                 </div>
+                {o.photoPath && (
+                  <a
+                    href={`/api/os/photo?path=${encodeURIComponent(o.photoPath)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="d-mini-btn"
+                    title="Ver a nota original"
+                  >
+                    <Receipt size={15} />
+                  </a>
+                )}
                 <WorkOrderDialog
                   vehicleId={vehicleId}
                   systems={systems}
@@ -134,7 +145,7 @@ export function VehicleMaintTab({
                   vendors={vendors}
                   initial={o}
                   trigger={
-                    <button className="d-mini-btn" title="Editar">
+                    <button className="d-mini-btn" title="Editar (com a nota ao lado)">
                       <Pencil size={15} />
                     </button>
                   }

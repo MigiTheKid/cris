@@ -418,6 +418,8 @@ export async function POST(req: NextRequest) {
     plateFound: extracted.placa,
     // Lista para o seletor amigável quando a placa não foi identificada.
     vehicles: vehicle ? undefined : fleet.map((v) => ({ id: v.id, plate: v.plate })),
+    // Nome da oficina lido na nota (para oferecer o cadastro rápido quando desconhecida).
+    vendorNameFound: extracted.oficina_nome,
     order: {
       id: "",
       performedAt: extracted.data_emissao,
@@ -427,6 +429,7 @@ export async function POST(req: NextRequest) {
       vendorName: null,
       osRef: extracted.numero_os,
       notes: extracted.observacoes,
+      photoPath: storagePath,
       items,
       total: items.reduce((s, i) => s + i.total, 0),
     },

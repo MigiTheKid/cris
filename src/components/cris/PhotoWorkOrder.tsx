@@ -13,6 +13,7 @@ type ExtractResponse = {
   confidence: number;
   storagePath: string;
   model: string;
+  vendorNameFound?: string | null;
 };
 
 /**
@@ -51,6 +52,7 @@ export function PhotoWorkOrder({
         confidence: handoff.confidence,
         storagePath: handoff.storagePath,
         model: "",
+        vendorNameFound: handoff.vendorNameFound,
       });
     } catch {
       sessionStorage.removeItem(OS_HANDOFF_KEY);
@@ -143,6 +145,7 @@ export function PhotoWorkOrder({
           photoPath={result.storagePath}
           aiConfidence={result.confidence}
           warnings={result.warnings}
+          suggestedVendorName={result.order.vendorId ? null : result.vendorNameFound}
         />
       )}
     </>
