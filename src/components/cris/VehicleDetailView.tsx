@@ -88,6 +88,7 @@ export function VehicleDetailView({
   maint,
   systems,
   services,
+  initialTab,
   canDelete = false,
 }: {
   detail: VehicleDetail;
@@ -102,9 +103,13 @@ export function VehicleDetailView({
   maint: VehicleMaintenance;
   systems: MaintSystem[];
   services: ServiceOption[];
+  initialTab?: string;
   canDelete?: boolean;
 }) {
-  const [tab, setTab] = useState<string>("docs");
+  const VALID_TABS = ["id", "docs", "driver", "comp", "tires", "oil", "maint", "fuel"];
+  const [tab, setTab] = useState<string>(
+    initialTab && VALID_TABS.includes(initialTab) ? initialTab : "docs",
+  );
   const critDocs = detail.docs.filter((d) => d.tone === "crit").length;
   const isTractor = detail.vehicleType === "cavalo";
   const isTrailerUnit = detail.vehicleType === "semi_reboque" || detail.vehicleType === "reboque";

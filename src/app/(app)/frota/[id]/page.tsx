@@ -13,8 +13,15 @@ import { VehicleDetailView } from "@/components/cris/VehicleDetailView";
 
 export const dynamic = "force-dynamic";
 
-export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function VehicleDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const { id } = await params;
+  const { tab } = await searchParams;
   const [
     detail,
     docTypes,
@@ -65,6 +72,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
       maint={maint}
       systems={catalog.systems}
       services={catalog.services}
+      initialTab={tab}
       canDelete={profile?.role === "admin"}
     />
   );

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Bell, Smartphone } from "lucide-react";
+import { Search, Bell } from "lucide-react";
+import { OsPhotoLauncher } from "./OsPhotoLauncher";
 
 function useClock() {
   const [now, setNow] = useState<Date | null>(null);
@@ -45,10 +46,7 @@ export function Topbar() {
           <kbd className="mono">Ctrl K</kbd>
         </label>
 
-        <button className="driverapp-btn" title="Ver App do Motorista">
-          <Smartphone size={16} strokeWidth={1.8} />
-          <span>App do Motorista</span>
-        </button>
+        <OsPhotoLauncher variant="topbar" />
 
         <button className="icon-btn glass" title="Alertas críticos">
           <Bell size={19} strokeWidth={1.8} />

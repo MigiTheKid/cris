@@ -17,6 +17,7 @@ import { VendorDialog } from "@/components/cris/VendorDialog";
 import { DeleteVendorButton } from "@/components/cris/DeleteVendorButton";
 import { ServiceCatalogDialog } from "@/components/cris/ServiceCatalogDialog";
 import { DeleteServiceButton } from "@/components/cris/DeleteServiceButton";
+import { OsPhotoLauncher } from "@/components/cris/OsPhotoLauncher";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,7 @@ export default async function TmaPage() {
           <p className="page-sub">Custos e indicadores da frota, por seção</p>
         </div>
         <div className="page-actions">
+          <OsPhotoLauncher />
           <VendorDialog
             trigger={
               <button className="cbtn primary">

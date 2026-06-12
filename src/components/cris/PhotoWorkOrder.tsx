@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Loader2, Sparkles } from "lucide-react";
 import { WorkOrderDialog } from "./WorkOrderDialog";
+import { OS_HANDOFF_KEY, type OsExtractHandoff } from "./OsPhotoLauncher";
 import type { MaintSystem, ServiceOption, WorkOrder } from "@/lib/data/maintenance";
 import type { Vendor } from "@/lib/data/vendors";
 
@@ -34,6 +35,27 @@ export function PhotoWorkOrder({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ExtractResponse | null>(null);
   const [lastFile, setLastFile] = useState<File | null>(null);
+
+  // Resgata a extração lançada de Hoje/T.M.A. (viaja por sessionStorage).
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(OS_HANDOFF_KEY);
+      if (!raw) return;
+      const handoff = JSON.parse(raw) as OsExtractHandoff & { targetVehicleId?: string };
+      if (handoff.targetVehicleId !== vehicleId || !handoff.order) return;
+      sessionStorage.removeItem(OS_HANDOFF_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setResult({
+        order: handoff.order,
+        warnings: handoff.warnings ?? [],
+        confidence: handoff.confidence,
+        storagePath: handoff.storagePath,
+        model: "",
+      });
+    } catch {
+      sessionStorage.removeItem(OS_HANDOFF_KEY);
+    }
+  }, [vehicleId]);
 
   async function extract(file: File, advanced: boolean) {
     setLoading(true);

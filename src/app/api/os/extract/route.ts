@@ -22,12 +22,15 @@ function normPlate(s: string | null): string {
 }
 
 function buildPrompt(ctx: {
-  plate: string;
+  plate: string | null;
   systems: string[];
   catalog: { name: string; system: string }[];
   vendors: string[];
 }): string {
   const catalogLines = ctx.catalog.map((c) => `- ${c.name} [${c.system}]`).join("\n");
+  const plateRule = ctx.plate
+    ? `O veículo esperado é ${ctx.plate} — se a placa na foto for diferente, extraia a da foto mesmo assim.`
+    : `Procure a placa do veículo no documento (campos como "placa", "veículo", dados adicionais ou observações).`;
   return `Você extrai dados de ordens de serviço / notas de oficina de manutenção de caminhões de uma transportadora brasileira (TRR).
 
 Analise a imagem e extraia os dados conforme o schema. Responda APENAS com JSON válido, sem markdown, sem texto antes ou depois.
@@ -37,7 +40,7 @@ REGRAS:
 - "oficina_nome": a razão social / nome fantasia do EMITENTE do documento (a oficina ou fornecedor que emitiu a nota) — em DANFEs fica no quadro do emitente, no topo.
 - Valores monetários: número decimal com ponto (ex.: 1250.50), sem "R$" e sem separador de milhar.
 - Datas: "YYYY-MM-DD". Quilometragem: número inteiro.
-- Placa: letras maiúsculas sem hífen. O veículo esperado é ${ctx.plate} — se a placa na foto for diferente, extraia a da foto mesmo assim.
+- Placa: letras maiúsculas sem hífen. ${plateRule}
 - Em "itens", liste TODAS as linhas discriminadas (peças e serviços/mão de obra). tipo_item: "peca" para peças/materiais, "servico" para mão de obra e serviços. Mão de obra não discriminada vira um item "servico" com descricao "Mão de obra".
 - "unidade": un, jg (jogo), par, L, kg ou h — null se não der pra saber.
 - "servico_catalogo": para cada item, se ele corresponder a um serviço do CATÁLOGO abaixo, copie o nome EXATO do catálogo; senão null. Ex.: "TROCA LONA DIANT" → "Troca de lonas de freio".
@@ -90,13 +93,11 @@ export async function POST(req: NextRequest) {
 
   const formData = await req.formData();
   const file = formData.get("foto");
-  const vehicleId = String(formData.get("vehicleId") ?? "").trim();
+  // vehicleId é opcional: sem ele, a IA identifica o veículo pela placa da nota.
+  const vehicleIdParam = String(formData.get("vehicleId") ?? "").trim() || null;
   const advanced = formData.get("advanced") === "1";
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Nenhuma foto enviada." }, { status: 400 });
-  }
-  if (!vehicleId) {
-    return NextResponse.json({ error: "Veículo inválido." }, { status: 400 });
   }
   const isPdf = file.type === PDF_TYPE;
   if (!isPdf && !MEDIA_TYPES.includes(file.type as MediaType)) {
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
 
   const supabase = await createClient();
 
-  // --- 1. Upload da foto original (auditoria) ---
+  // --- 1. Upload do arquivo original (auditoria) ---
   const ext = isPdf
     ? "pdf"
     : file.type === "image/png"
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest) {
       : file.type === "image/webp"
         ? "webp"
         : "jpg";
-  const storagePath = `${vehicleId}/${Date.now()}.${ext}`;
+  const storagePath = `${vehicleIdParam ?? "inbox"}/${Date.now()}.${ext}`;
   const { error: uploadError } = await supabase.storage
     .from("os-photos")
     .upload(storagePath, file, { contentType: file.type });
@@ -127,36 +128,25 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // --- 2. Contexto da frota: placa, catálogo, oficinas, histórico ---
-  const [
-    vehicleRes,
-    systemsRes,
-    servicesRes,
-    vendorsRes,
-    woRes,
-    oilRes,
-    tiresRes,
-    costsRes,
-    oilItemsRes,
-  ] = await Promise.all([
-    supabase.from("vehicles").select("plate").eq("id", vehicleId).single(),
-    supabase.from("maintenance_systems").select("id, name").eq("is_active", true).order("sort"),
-    supabase
-      .from("service_catalog")
-      .select("id, name, system_id, default_interval_km")
-      .eq("is_active", true),
-    supabase.from("vendors").select("id, name, kind").eq("is_active", true),
-    supabase.from("work_orders").select("odometer_km").eq("vehicle_id", vehicleId),
-    supabase.from("oil_changes").select("odometer_km").eq("vehicle_id", vehicleId),
-    supabase
-      .from("tire_installations")
-      .select("installed_km, removed_km")
-      .eq("vehicle_id", vehicleId),
-    supabase.from("work_order_costs").select("label, quantity, cost"),
-    supabase.from("oil_change_items").select("label, quantity, cost"),
-  ]);
+  // --- 2. Contexto da frota: veículos, catálogo, oficinas, histórico de preços ---
+  const [vehiclesRes, systemsRes, servicesRes, vendorsRes, costsRes, oilItemsRes] =
+    await Promise.all([
+      supabase.from("vehicles").select("id, plate").is("deleted_at", null),
+      supabase.from("maintenance_systems").select("id, name").eq("is_active", true).order("sort"),
+      supabase
+        .from("service_catalog")
+        .select("id, name, system_id, default_interval_km")
+        .eq("is_active", true),
+      supabase.from("vendors").select("id, name, kind").eq("is_active", true),
+      supabase.from("work_order_costs").select("label, quantity, cost"),
+      supabase.from("oil_change_items").select("label, quantity, cost"),
+    ]);
 
-  if (!vehicleRes.data) {
+  const fleet = vehiclesRes.data ?? [];
+  const expectedVehicle = vehicleIdParam
+    ? (fleet.find((v) => v.id === vehicleIdParam) ?? null)
+    : null;
+  if (vehicleIdParam && !expectedVehicle) {
     return NextResponse.json({ error: "Veículo não encontrado." }, { status: 404 });
   }
   const systems = systemsRes.data ?? [];
@@ -165,7 +155,7 @@ export async function POST(req: NextRequest) {
   const systemNameById = new Map(systems.map((s) => [s.id, s.name]));
 
   const prompt = buildPrompt({
-    plate: vehicleRes.data.plate,
+    plate: expectedVehicle?.plate ?? null,
     systems: systems.map((s) => s.name),
     catalog: services.map((s) => ({
       name: s.name,
@@ -174,7 +164,7 @@ export async function POST(req: NextRequest) {
     vendors: vendors.map((v) => v.name),
   });
 
-  // --- 3. Claude lê a foto ---
+  // --- 3. Claude lê o documento ---
   const anthropic = new Anthropic();
   const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
   let raw = "";
@@ -236,27 +226,51 @@ export async function POST(req: NextRequest) {
 
   // --- 4. Cruzamento com a frota (os superpoderes) ---
   const warnings: string[] = [];
-
-  // Placa bate com o veículo?
-  const expectedPlate = normPlate(vehicleRes.data.plate);
   const photoPlate = normPlate(extracted.placa);
-  if (photoPlate && expectedPlate && photoPlate !== expectedPlate) {
+
+  // Resolve o veículo: o informado, o dono da placa lida na nota, ou — última
+  // pista — uma placa no NOME do arquivo (ex.: "INGÁ 22803 SXL9E56.pdf").
+  let vehicle = expectedVehicle;
+  if (!vehicle && photoPlate) {
+    vehicle = fleet.find((v) => normPlate(v.plate) === photoPlate) ?? null;
+  }
+  if (!vehicle) {
+    const namePlates = normPlate(file.name).match(/[A-Z]{3}\d[A-Z0-9]\d{2}/g) ?? ([] as string[]);
+    for (const p of namePlates) {
+      const hit = fleet.find((v) => normPlate(v.plate) === p);
+      if (hit) {
+        vehicle = hit;
+        break;
+      }
+    }
+  }
+  if (expectedVehicle && photoPlate && normPlate(expectedVehicle.plate) !== photoPlate) {
     warnings.push(
-      `A placa na foto (${extracted.placa}) é diferente da placa deste veículo (${vehicleRes.data.plate}). Confira se está lançando no veículo certo.`,
+      `A placa na nota (${extracted.placa}) é diferente da placa deste veículo (${expectedVehicle.plate}). Confira se está lançando no veículo certo.`,
     );
   }
 
-  // Km faz sentido com o histórico?
-  const kmKnown = [
-    ...(woRes.data ?? []).map((r) => r.odometer_km),
-    ...(oilRes.data ?? []).map((r) => r.odometer_km),
-    ...(tiresRes.data ?? []).flatMap((r) => [r.installed_km, r.removed_km]),
-  ].filter((n): n is number => typeof n === "number");
-  const maxKm = kmKnown.length ? Math.max(...kmKnown) : null;
-  if (extracted.km != null && maxKm != null && extracted.km < maxKm) {
-    warnings.push(
-      `O km na foto (${extracted.km.toLocaleString("pt-BR")}) é menor que o último km conhecido do veículo (${maxKm.toLocaleString("pt-BR")}). Confira o odômetro.`,
-    );
+  // Km faz sentido com o histórico do veículo resolvido?
+  if (vehicle) {
+    const [woRes, oilRes, tiresRes] = await Promise.all([
+      supabase.from("work_orders").select("odometer_km").eq("vehicle_id", vehicle.id),
+      supabase.from("oil_changes").select("odometer_km").eq("vehicle_id", vehicle.id),
+      supabase
+        .from("tire_installations")
+        .select("installed_km, removed_km")
+        .eq("vehicle_id", vehicle.id),
+    ]);
+    const kmKnown = [
+      ...(woRes.data ?? []).map((r) => r.odometer_km),
+      ...(oilRes.data ?? []).map((r) => r.odometer_km),
+      ...(tiresRes.data ?? []).flatMap((r) => [r.installed_km, r.removed_km]),
+    ].filter((n): n is number => typeof n === "number");
+    const maxKm = kmKnown.length ? Math.max(...kmKnown) : null;
+    if (extracted.km != null && maxKm != null && extracted.km < maxKm) {
+      warnings.push(
+        `O km na nota (${extracted.km.toLocaleString("pt-BR")}) é menor que o último km conhecido do veículo (${maxKm.toLocaleString("pt-BR")}). Confira o odômetro.`,
+      );
+    }
   }
 
   // Oficina conhecida?
@@ -374,20 +388,20 @@ export async function POST(req: NextRequest) {
     return created;
   };
 
-  for (const raw of extracted.itens) {
-    const systemId = raw.sistema
-      ? (systemByName.get(norm(raw.sistema)) ?? fallbackSystemId)
+  for (const rawItem of extracted.itens) {
+    const systemId = rawItem.sistema
+      ? (systemByName.get(norm(rawItem.sistema)) ?? fallbackSystemId)
       : fallbackSystemId;
-    const matched = raw.servico_catalogo
-      ? serviceByName.get(norm(raw.servico_catalogo))
+    const matched = rawItem.servico_catalogo
+      ? serviceByName.get(norm(rawItem.servico_catalogo))
       : undefined;
     const target = itemFor(systemId, matched);
     target.costs.push({
-      category: raw.tipo_item === "servico" ? "mao_de_obra" : "peca",
-      label: raw.descricao,
-      quantity: raw.quantidade,
-      unit: raw.unidade,
-      cost: raw.valor_total ?? 0,
+      category: rawItem.tipo_item === "servico" ? "mao_de_obra" : "peca",
+      label: rawItem.descricao,
+      quantity: rawItem.quantidade,
+      unit: rawItem.unidade,
+      cost: rawItem.valor_total ?? 0,
     });
   }
   for (const i of items) i.total = i.costs.reduce((s, c) => s + c.cost, 0);
@@ -399,6 +413,11 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({
+    // Veículo resolvido (o informado ou o dono da placa lida). Null = pedir ao usuário.
+    vehicle: vehicle ? { id: vehicle.id, plate: vehicle.plate } : null,
+    plateFound: extracted.placa,
+    // Lista para o seletor amigável quando a placa não foi identificada.
+    vehicles: vehicle ? undefined : fleet.map((v) => ({ id: v.id, plate: v.plate })),
     order: {
       id: "",
       performedAt: extracted.data_emissao,
